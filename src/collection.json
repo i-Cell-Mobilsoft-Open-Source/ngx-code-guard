@@ -1,0 +1,18 @@
+{
+  "$schema": "../node_modules/@angular-devkit/schematics/collection-schema.json",
+  "schematics": {
+    "codeguard": {
+      "description": "I-Cell default project config, code quality control and project scaffolding.",
+      "factory": "./codeguard/index#codeGuard",
+      "schema": "./codeguard/schema.json"
+    },
+    "ng-add": {
+      "description": "Add this NGX-Codeguard  to the project",
+      "factory": "./ng-add/index#ngAdd"
+    },
+    "ng-new": {
+      "description": "Generates new Angular project with NGX-CodeGuard added.",
+      "factory": "./ng-new/index#ngNew"
+    },
+  }
+}

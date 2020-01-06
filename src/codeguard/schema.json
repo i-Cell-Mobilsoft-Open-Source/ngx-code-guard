@@ -1,0 +1,115 @@
+{
+    "$schema": "http://json-schema.org/schema",
+    "id": "NGXCodeGuard",
+    "title": "NGX Code Guard options",
+    "type": "object",
+    "properties": {
+        "packageMgr": {
+            "type": "string",
+            "default": "yarn",
+            "enum": ["npm", "yarn"],
+            "x-prompt": "Which package manager would you like to use?",
+            "description": "The name of the package manager you wish to use."
+        },
+        "linter": {
+            "type": "string",
+            "default": "eslint",
+            "enum": ["tslint", "eslint"],
+            "x-prompt": "Which linter would you like to use?",
+            "description": "The name of the linter you wish to use."
+        },
+        "style": {
+            "type": "string",
+            "default": "scss",
+            "items": {
+                "type": "string"
+            },
+            "x-prompt": {
+                "message": "Which style language do you wish to use?",
+                "type": "list",
+                "items": [
+                    { "value": "stylelint-config-recommended", "label": "Standard CSS" },
+                    {
+                        "value": "stylelint-config-recommended-scss",
+                        "label": "CSS preprocessors (SCSS, Sass, Less)"
+                    }
+                ]
+            },
+            "description": "The name of the style language you wish to use."
+        },
+        "sonarId": {
+            "type": "string",
+            "x-prompt": {
+                "message": "The project's Sonar ID. Leave blank if you don't want to use Sonar.",
+                "type": "input"
+            },
+            "description": "The project's Sonar ID."
+        },
+        "sonarName": {
+            "type": "string",
+            "x-prompt": "The project's name in Sonar. Leave blank if you don't want to use Sonar.",
+            "description": "The project's Sonar sonarName."
+        },
+        "sonarExclusions": {
+            "type": "string",
+            "x-prompt": "Comma separated list of paths that should be excluded from Sonar checks. Leave blank if there are none.",
+            "description": "Comma separated list of paths that should be excluded from Sonar checks."
+        },
+        "commitRule": {
+            "type": "string",
+            "default": "@commitlint/config-angular",
+            "x-prompt": "Name of the shareable commitlint config to  use. Defaults to Angular rule set.",
+            "description": "Name of the shareable commitlint config to  use."
+        },
+        "commitRuleVersion": {
+            "type": "string",
+            "default": "latest",
+            "x-prompt": "Version of the shareable commitlint config to  use. Defaults to latest.",
+            "description": "Version of the shareable commitlint config to  use."
+        },
+        "port": {
+            "type": "number",
+            "default": 4200,
+            "x-prompt": "The port the Angular app is running at.",
+            "description": "The port the Angular app is running at."
+        },
+        "overwrite": {
+            "type": "boolean",
+            "default": false,
+            "x-prompt": "Would you like to overwrite config files if they aleray exist?",
+            "description": "Whether or not to overwrite existing config files."
+        },
+        "ngProject": {
+            "type": "string",
+            "x-prompt": "The Angular project's name. Leave blank if it's the default.",
+            "$default": {
+                "$source": "projectName"
+            },
+            "description": "The Angular project's name."
+        },
+        "docTitle": {
+            "type": "string",
+            "x-prompt": "Title of the Compodoc generated project documentation. Defaults to: '{{projectName}} Documentation'",
+            "description": "Title of the Compodoc generated project documentation."
+        },
+        "docDir": {
+            "type": "string",
+            "default": "./docs",
+            "x-prompt": "Path to the directory the Compodoc generated documentation should be placed at. Defaults to: './docs'",
+            "description": "Path to the directory the Compodoc generated documentation should be placed at."
+        },
+        "useMd": {
+            "type": "boolean",
+            "default": false,
+            "x-prompt": "Do you wish to use Markdown linting and validation?",
+            "description": "Whether or not to use Markdown validation and linting"
+        },
+        "cypressPort": {
+            "type": "number",
+            "default": 4300,
+            "x-prompt": "The port number Cypress should run at. Leave blank if you don't wanna use Cypress",
+            "description": "The port number Cypress should run at."
+        }
+    },
+    "required": ["port"]
+}

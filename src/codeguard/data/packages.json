@@ -1,0 +1,36 @@
+{
+    "dependencies": {
+        "@compodoc/compodoc": "^1.1"
+    },
+    "devDependencies": {
+        "stylelint": "^12.0",
+        "stylelint-scss": "^3.10",
+        "stylelint-config-recommended-scss": "^4.1",
+        "stylelint-config-recommended": "^3.0",
+        "stylelint-config-prettier": "^8.0",
+        "@commitlint/cli": "^8.3",
+        "@commitlint/config-angular": "^8.3",
+        "jsonlint": "^1.6",
+        "lint-staged": "^9.5",
+        "husky": "^3.1",
+        "prettier": "^1.19",
+        "cypress": "^3.8",
+        "cypress-autorecord": "^1.1",
+        "cypress-plugin-snapshots": "^1.2",
+        "istanbul-instrumenter-loader": "^3.0",
+        "istanbul-lib-coverage": "^3.0",
+        "nyc": "^15.0",
+        "babel-plugin-istanbul": "^6.0"
+    },
+    "optionalDevDependencies": {
+        "markdownlint": "^0.18"
+    },
+    "eslint": {
+        "eslint-config-airbnb-base": "^14.0"
+    },
+    "tslint": {
+        "tslint": "^5.20",
+        "tslint-consistent-codestyle": "^1.16",
+        "tslint-config-airbnb": "^5.11"
+    }
+}

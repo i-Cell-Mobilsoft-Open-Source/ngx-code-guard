@@ -1,0 +1,23 @@
+{
+            "*.{js,ts}": [
+                "<%= linter %> --fix",
+                "git add"
+            ],
+            "*.css": [
+                "stylelint",
+                "git add"
+            ],
+            <%= postprocessor %>
+            "*.md": [
+                "markdownlint",
+                "git add"
+            ],
+            "*.json": [
+                "jsonlint",
+                "git add"
+            ],
+            "*.{js,ts,html,md,scss,css}": [
+                "prettier --write",
+                "git add"
+            ],
+}

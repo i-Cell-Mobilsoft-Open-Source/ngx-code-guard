@@ -1,0 +1,29 @@
+{
+  "video": false,
+  "env": {
+      "coverage": false,
+      "RECORD": false
+  },
+  "baseUrl": "http://localhost:<%= port %>",
+  "reporter": "spec",
+  "fixturesFolder": "tests/e2e/fixtures",
+  "integrationFolder": "tests/e2e/integration",
+  "pluginsFile": "tests/e2e//plugins/index.js",
+  "screenshotsFolder": "tests/e2e/screenshots",
+  "supportFile": "tests/e2e/support/index.ts",
+  "videosFolder": "tests/e2e/videos",
+  "defaultCommandTimeout": 20000,
+  "requestTimeout": 30000,
+  "execTimeout": 30000,
+  "chromeWebSecurity": true,
+  "port": <%= cypressPort %>,
+  "videoUploadOnPasses": false,
+  "waitForAnimations": true,
+  "modifyObstructiveCode": true,
+  "blacklistHosts": ["google-analytics.com", "googletagmanager.com"],
+  "ignoreTestFiles": ["**/__snapshots__/*", "**/__image_snapshots__/*"],
+  "$schema": "https://on.cypress.io/cypress.schema.json",
+  "autorecord": {
+      "forceRecord": false
+    }
+}
