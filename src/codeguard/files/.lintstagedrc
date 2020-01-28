@@ -8,10 +8,12 @@
                 "git add"
             ],
             <%= postprocessor %>
+            <% if(useMd) { %>
             "*.md": [
                 "markdownlint",
                 "git add"
             ],
+             <% } %>
             "*.json": [
                 "jsonlint",
                 "git add"

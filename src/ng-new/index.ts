@@ -3,7 +3,6 @@ import { Rule, chain, externalSchematic, schematic, mergeWith, apply, empty } fr
 
 export function ngNew(options: any): Rule {
   return () => {
-    console.log(options)
     return chain([
       mergeWith(apply(empty(), [
         externalSchematic('@schematics/angular', 'ng-new', { ...options }),

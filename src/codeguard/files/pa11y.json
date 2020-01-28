@@ -1,0 +1,17 @@
+{
+  "reporter": "cli",
+  "standard": "<%= a11y %>",
+  "threshold": 0,
+  "timeout": 30000,
+  "wait": 5000,
+  "chromeLaunchConfig": {
+    "ignoreHTTPSErrors": true
+  },
+  "runner": ["htmlcs"],
+  "includeNotices": false,
+  "includeWarnings": true,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36",
+  "level": "warning",
+  "headers": <%= headers %>
+
+}

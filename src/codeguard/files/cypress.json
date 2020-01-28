@@ -2,7 +2,7 @@
   "video": false,
   "env": {
       "coverage": false,
-      "RECORD": false
+      "cacheClear": false
   },
   "baseUrl": "http://localhost:<%= port %>",
   "reporter": "spec",

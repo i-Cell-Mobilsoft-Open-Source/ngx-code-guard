@@ -17,8 +17,8 @@
 // };
 
 const { initPlugin } = require('cypress-plugin-snapshots/plugin');
-// const fs = require('fs');
-// const autoRecord = require('cypress-autorecord/plugin');
+const fs = require('fs');
+const autoRecord = require('cypress-autorecord/plugin');
 const cypressTypeScriptPreprocessor = require('./ts-preprocess');
 
 module.exports = (on, config) => {
@@ -26,6 +26,6 @@ module.exports = (on, config) => {
   on('task', require('@cypress/code-coverage/task'));
   on('file:preprocessor', require('@cypress/code-coverage/use-babelrc'));
   on('file:preprocessor', cypressTypeScriptPreprocessor);
-  // autoRecord(on, config, fs);
+  autoRecord(on, config, fs);
   return config;
 };

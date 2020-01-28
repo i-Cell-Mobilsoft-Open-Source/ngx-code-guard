@@ -17,6 +17,9 @@
 import './commands';
 import 'cypress-plugin-snapshots/commands';
 import '@cypress/code-coverage/support'
+<% if(a11y) { %>
+import 'cypress-axe';
+<% } %>
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')

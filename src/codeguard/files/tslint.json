@@ -2,6 +2,18 @@
   "extends": ["tslint-config-airbnb", "tslint-consistent-codestyle"],
   "rulesDirectory": ["node_modules/codelyzer"],
   "rules": {
+      <% if(a11y) { %>
+      "template-accessibility-alt-text": true,
+      "template-accessibility-elements-content": true,
+      "template-accessibility-label-for": true,
+      "template-accessibility-tabindex-no-positive": true,
+      "template-accessibility-table-scope": true,
+      "template-accessibility-valid-aria": true,
+      "template-click-events-have-key-events": true,
+      "template-mouse-events-have-key-events": true,
+      "template-no-autofocus": true,
+      "template-no-distracting-elements": true,
+      <% } %>
       "align": false,
       "ter-indent": false,
       "ter-arrow-parens": false,

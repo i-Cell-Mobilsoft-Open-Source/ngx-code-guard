@@ -1,7 +1,6 @@
 export interface Schema {
     new: boolean;
     commitRule: string;
-    commitRuleVersion: string;
     packageMgr: string;
     linter: string;
     style: string;
@@ -15,4 +14,7 @@ export interface Schema {
     sonarId: string;
     useMd: boolean;
     cypressPort: number;
+    a11y: string;
+    statsFile: string;
+    headers: string[];
 }

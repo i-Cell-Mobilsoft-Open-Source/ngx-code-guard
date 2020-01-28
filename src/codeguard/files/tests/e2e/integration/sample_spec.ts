@@ -1,5 +1,8 @@
-describe('My First Test', function() {
-  it('Does not do much!', function() {
-    expect(true).to.equal(true)
+const autoRecord = require('cypress-autorecord');
+
+describe('Test Suite', function() {
+  autoRecord();
+  it('Should visit home page', function() {
+    cy.visit('/');
   })
 })
