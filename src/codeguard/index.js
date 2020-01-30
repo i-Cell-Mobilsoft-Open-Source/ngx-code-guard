@@ -13,7 +13,7 @@ function readFileAsJSON(path) {
     return JSON.parse(fs_1.readFileSync(path).toString());
 }
 function getBasePath(options) {
-    return options.new ? `/${options.ngProject || options.name}` : '';
+    return options.new ? `/${options.name}` : '';
 }
 function parseHeaders(options) {
     const ret = {};
@@ -44,8 +44,15 @@ function installPackages(tree, _context, options) {
     const filePath = path_1.join(__dirname, './data/packages.json');
     const packages = readFileAsJSON(filePath);
     const packageJsonPath = `${getBasePath(options)}/package.json`;
-    //@ts-ignore
-    const angularVersion = parseInt(readFileAsJSON(`${path_1.join(process.cwd(), packageJsonPath)}`).dependencies['@angular/common'].match(/[0-9]{1}/)[0], 10);
+    let angularVersion = 0;
+    if (options.new) {
+        //@ts-ignore
+        angularVersion = parseInt(child_process_1.execSync('ng --version').toString().match(/[0-9]{1}/)[0], 10);
+    }
+    else {
+        //@ts-ignore
+        angularVersion = parseInt(readFileAsJSON(`${path_1.join(process.cwd(), packageJsonPath)}`).dependencies['@angular/common'].match(/[0-9]{1}/)[0], 10);
+    }
     rules.push(updateJSONFile(packageJsonPath, {
         dependencies: packages.dependencies,
         devDependencies: Object.assign(Object.assign({}, packages.devDependencies), {
@@ -65,12 +72,13 @@ function installPackages(tree, _context, options) {
         }));
     }
     //@ts-ignore
-    const peerDepsString = child_process_1.execSync(`npm info "eslint-config-airbnb-base@${packages.eslint['eslint-config-airbnb-base']}" peerDependencies`).toString();
+    const peerDepsString = child_process_1.execSync(`npm info "eslint-config-airbnb-base@latest" peerDependencies`).toString();
     const esLintAndPeerDeps = eval(`new Object(${peerDepsString.replace(/\s/g, '')})`);
     if (options.linter === 'eslint') {
         rules.push(updateJSONFile(packageJsonPath, {
-            devDependencies: esLintAndPeerDeps
-        }), deleteFromJSONFile(packageJsonPath, 'devDependencies', packages.tslint));
+            //@ts-ignore
+            devDependencies: Object.assign(Object.assign({ tslint: packages.tslint.tslint }, esLintAndPeerDeps), packages.eslint)
+        }));
     }
     else {
         rules.push(updateJSONFile(packageJsonPath, {
@@ -82,7 +90,7 @@ function installPackages(tree, _context, options) {
 function applyWithOverwrite(source, rules, options) {
     return (tree, _context) => {
         if (options.new) {
-            rules.push(schematics_1.move('/', options.ngProject));
+            rules.push(schematics_1.move('/', options.name));
         }
         const rule = schematics_1.mergeWith(schematics_1.apply(source, [
             ...rules,
@@ -116,31 +124,42 @@ function deleteFromJSONFile(filePath, prefix, tobeRemoved) {
     };
 }
 function addCompoDocScripts(options) {
-    const title = options.docTitle || `${options.ngProject} Documentation`;
+    const title = options.docTitle || `${options.name} Documentation`;
     const output = options.docDir ? `-d ${options.docDir}` : '';
     return updateJSONFile(`${getBasePath(options)}/package.json`, {
         scripts: {
-            'docs:build': `npx compodoc -p tsconfig.json -n \"${title}\" ${output} --language en-EN`,
-            'docs:show': `open ${options.docDir}/index.html`
+            'guard:docs:build': `npx compodoc -p tsconfig.json -n \"${title}\" ${output} --language en-EN`,
+            'guard:docs:show': `open ${options.docDir}/index.html`
         }
     });
 }
 function addWebpackBundleAnalyzerScripts(options) {
     return updateJSONFile(`${getBasePath(options)}/package.json`, {
         scripts: {
-            'analyze': `npx webpack-bundle-analyzer ${options.statsFile}`
+            'guard:analyze': `npx webpack-bundle-analyzer ${options.statsFile}`
+        }
+    });
+}
+function addLintScripts(options) {
+    let cmd = 'npx eslint src/**/*.ts';
+    if (options.linter === 'tslint') {
+        cmd = 'npx tslint -p tsconfig.json -c tslint.json';
+    }
+    return updateJSONFile(`${getBasePath(options)}/package.json`, {
+        scripts: {
+            'guard:lint': cmd
         }
     });
 }
 function addCypressScripts(options) {
     return updateJSONFile(`${getBasePath(options)}/package.json`, {
         "scripts": {
-            "e2e:headless": `npx cypress run --port ${options.cypressPort}`,
-            "e2e:manual": `npx cypress open  --browser chrome --port ${options.cypressPort}`,
-            "e2e:all": `npx cypress run --browser chrome --port ${options.cypressPort}`,
-            "e2e:report:html": "npx nyc report --reporter=lcov && open coverage/lcov-report/index.html",
-            "e2e:report:text": "npx nyc report --reporter=text",
-            "e2e:report:summary": "npx nyc report --reporter=text-summary",
+            "guard:test:headless": `npx cypress run --port ${options.cypressPort}`,
+            "guard:test:manual": `npx cypress open  --browser chrome --port ${options.cypressPort}`,
+            "guard:test:all": `npx cypress run --browser chrome --port ${options.cypressPort}`,
+            "guard:report:html": "npx nyc report --reporter=lcov && open coverage/lcov-report/index.html",
+            "guard:report:text": "npx nyc report --reporter=text",
+            "guard:report:summary": "npx nyc report --reporter=text-summary",
         },
         "nyc": {
             "extends": "@istanbuljs/nyc-config-typescript",
@@ -155,7 +174,7 @@ function addCypressScripts(options) {
 function addDevBuilder(options) {
     return updateJSONFile(`${getBasePath(options)}/angular.json`, {
         projects: {
-            [options.ngProject]: {
+            [options.name]: {
                 architect: {
                     serve: {
                         "builder": "ngx-build-plus:dev-server",
@@ -176,10 +195,10 @@ function codeGuard(options) {
         }
         const workspaceContent = workspaceConfig.toString();
         const workspace = JSON.parse(workspaceContent);
-        if (!options.ngProject) {
-            options.ngProject = workspace.defaultProject;
+        if (!options.name) {
+            options.name = workspace.defaultProject;
         }
-        const projectName = options.ngProject;
+        const projectName = options.name;
         const tsConfig = readFileAsJSON(path_1.join(__dirname, 'data/tsconfig_partial.json'));
         const project = workspace.projects[projectName];
         prettierConfig = readFileAsJSON(path_1.join(__dirname, 'files/.prettierrc'));
@@ -209,7 +228,7 @@ function codeGuard(options) {
                     return path !== '/tslint.json';
                 }
                 else {
-                    return path !== '/eslint.json';
+                    return path !== '/.eslintrc.js';
                 }
             }),
             schematics_1.filter((path) => {
@@ -247,7 +266,7 @@ function codeGuard(options) {
         ];
         _context.addTask(new tasks_1.NodePackageInstallTask({
             packageManager: options.packageMgr,
-            workingDirectory: options.new ? options.ngProject : '.',
+            workingDirectory: options.new ? options.name : '.',
             quiet: true
         }));
         const source = schematics_1.url('./files');
@@ -255,6 +274,7 @@ function codeGuard(options) {
             installPackages(tree, _context, options),
             addCompoDocScripts(options),
             addWebpackBundleAnalyzerScripts(options),
+            addLintScripts(options)
         ];
         if (options.cypressPort) {
             commonRules.push(addCypressScripts(options), addDevBuilder(options));

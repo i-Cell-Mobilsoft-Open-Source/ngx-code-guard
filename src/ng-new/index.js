@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const schematics_1 = require("@angular-devkit/schematics");
-// import { codeGuard } from '../codeguard';
 function ngNew(options) {
     return () => {
         return schematics_1.chain([

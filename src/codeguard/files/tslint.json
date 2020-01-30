@@ -32,9 +32,47 @@
       "max-line-length": [true, 140],
       "member-access": false,
       "member-ordering": [
-          true,
-          "static-before-instance",
-          "variables-before-functions"
+        {
+          "name": "static field",
+          "kinds": [
+            "public-static-field",
+            "protected-static-field",
+            "private-static-field"
+          ]
+        },
+        {
+          "name": "instance field",
+          "kinds": [
+            "public-instance-field",
+            "protected-instance-field",
+            "private-instance-field"
+          ]
+        },
+        {
+          "name": "static method",
+          "kinds": [
+            "public-static-method",
+            "private-static-method",
+            "protected-static-method",
+            "public-static-accessor",
+            "protected-static-accessor",
+            "private-static-accessor"
+          ]
+        },
+        {
+          "name": "instance method",
+          "kinds": [
+            "public-constructor",
+            "protected-constructor",
+            "private-constructor",
+            "public-instance-method",
+            "protected-instance-method",
+            "private-instance-method",
+            "public-instance-accessor",
+            "protected-instance-accessor",
+            "private-instance-accessor"
+          ]
+        }
       ],
       "no-arg": true,
       "no-bitwise": true,
@@ -55,7 +93,6 @@
       "no-trailing-whitespace": true,
       "no-unnecessary-initializer": true,
       "no-unused-expression": true,
-      "no-use-before-declare": true,
       "no-var-keyword": true,
       "object-literal-sort-keys": false,
       "one-line": [
@@ -95,29 +132,22 @@
       ],
       "directive-selector": [true, "attribute", "ic", "camelCase"],
       "component-selector": [true, "element", ["app", "ic"], "kebab-case"],
-      "use-input-property-decorator": true,
-      "use-output-property-decorator": true,
-      "use-host-property-decorator": true,
+      "no-inputs-metadata-property": true,
+      "no-outputs-metadata-property": true,
+      "no-host-metadata-property": true,
       "no-input-rename": true,
       "no-output-rename": true,
-      "use-life-cycle-interface": true,
+      "use-lifecycle-interface": true,
       "use-pipe-transform-interface": true,
-      "no-access-missing-member": true,
-      "templates-use-public": true,
-      "invoke-injectable": true,
       "component-max-inline-declarations": true,
       "contextual-lifecycle": true,
       "no-conflicting-lifecycle": true,
-      "no-host-metadata-property": true,
-      "no-inputs-metadata-property": true,
       "no-output-native": true,
       "no-output-on-prefix": true,
-      "no-outputs-metadata-property": true,
       "no-queries-metadata-property": true,
       "prefer-inline-decorator": true,
       "template-banana-in-box": true,
       "template-no-negated-async": true,
-      "use-lifecycle-interface": true,
       "component-class-suffix": [true, "Component"],
       "directive-class-suffix": [true, "Directive"]
   }

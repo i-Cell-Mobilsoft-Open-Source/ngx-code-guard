@@ -1,5 +1,4 @@
 import { Rule, chain, externalSchematic, schematic, mergeWith, apply, empty } from '@angular-devkit/schematics';
-// import { codeGuard } from '../codeguard';
 
 export function ngNew(options: any): Rule {
   return () => {

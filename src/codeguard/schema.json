@@ -141,7 +141,7 @@
             },
             "description": "Whether or not to use Codelyzer's experimental A11Y rules as well as the PA11Y tester tool. If you enabled Cypress, this will also install AXE plugins for Cypress. Defaults to None."
         },
-        "ngProject": {
+        "name": {
             "type": "string",
             "x-prompt": "The Angular project's name. Leave blank if it's the default.",
             "$default": {

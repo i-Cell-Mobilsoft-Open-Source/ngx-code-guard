@@ -45,7 +45,10 @@
 
     },
     "eslint": {
-        "eslint-config-airbnb-base": "^14.0"
+        "eslint-config-airbnb-angular": "latest",
+        "@typescript-eslint/eslint-plugin": "latest",
+        "@typescript-eslint/parser": "latest",
+        "@typescript-eslint/eslint-plugin-tslint": "latest"
     },
     "tslint": {
         "tslint": "^5.20",
