@@ -12,17 +12,22 @@ import {
   SchematicContext,
   forEach,
   Source,
-  MergeStrategy
+  MergeStrategy,
 } from '@angular-devkit/schematics';
+
 
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { strings, normalize, experimental, JsonObject } from '@angular-devkit/core';
 import { Schema as NGXCodeGuardSchema } from './schema';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
 import { format as pretty, Options as prettierConfig } from 'prettier';
 import { merge as _merge, omit as _omit } from 'lodash';
+// import { tokenize } from 'esprima';
+// import { generate } from 'escodegen';
+// import { inspect } from 'util';
+const astUtils = require('esprima-ast-utils');
 
 let prettierConfig: prettierConfig;
 
@@ -53,6 +58,26 @@ function parseHeaders(options: ExtendedSchema) {
   return JSON.stringify(ret);
 }
 
+
+function checkArgs(options: ExtendedSchema, _context: SchematicContext) {
+  try {
+    if(existsSync(options.docDir)) {
+      throw new SchematicsException(`The "${options.docDir}" directory already exists!`)
+    } else if(!options.new && !existsSync(options.statsFile)) {
+      throw new SchematicsException(`The "${options.statsFile}" doesn't exist!`)
+    } else if(isNaN(parseInt(options.port as any, 10))) {
+      throw new SchematicsException(`The "${options.port}" is not an integer!`)
+    } else if(isNaN(parseInt(options.cypressPort as any, 10))) {
+      throw new SchematicsException(`The "${options.cypressPort}" is not an integer!`)
+    } else if(options.customWebpack && !existsSync(options.customWebpack)) {
+      throw new SchematicsException(`The "${options.customWebpack}" doesn't exist!`)
+    }  
+  } catch(e) {
+    _context.logger.fatal(`ERROR: ${e.message}`);
+    process.exit();
+  }
+}
+
 function getStyle(project: experimental.workspace.WorkspaceProject): JsonObject {
   const schematics = project.schematics || {};
   const data = Object.keys(schematics);
@@ -76,9 +101,9 @@ function installPackages(tree: Tree, _context: SchematicContext, options: Extend
 
   const packageJsonPath = `${getBasePath(options)}/package.json`;
 
-  let angularVersion = 0; 
-  
-  if(options.new) {
+  let angularVersion = 0;
+
+  if (options.new) {
     //@ts-ignore
     angularVersion = parseInt(execSync('ng --version').toString().match(/[0-9]{1}/)[0], 10);
   } else {
@@ -119,8 +144,8 @@ function installPackages(tree: Tree, _context: SchematicContext, options: Extend
 
   if (options.linter === 'eslint') {
     rules.push(updateJSONFile(packageJsonPath, {
-        //@ts-ignore
-      devDependencies: { ...{tslint: packages.tslint.tslint}, ...esLintAndPeerDeps, ...packages.eslint as JsonObject }
+      //@ts-ignore
+      devDependencies: { ...{ tslint: packages.tslint.tslint }, ...esLintAndPeerDeps, ...packages.eslint as JsonObject }
     }));
   } else {
     rules.push(updateJSONFile(packageJsonPath, {
@@ -156,6 +181,74 @@ function applyWithOverwrite(source: Source, rules: Rule[], options: ExtendedSche
   };
 }
 
+//@ts-ignore
+function updateWebpackConfig(filePath: string): Rule {
+  return (tree: Tree, _context: SchematicContext) => {
+    const buffer = tree.read(filePath);
+    let parsed = astUtils.parse((buffer as Buffer).toString());
+    astUtils.parentize(parsed);
+    const extraCfgStr = `{
+      test: /\.(js|ts)$/,
+      loader: 'istanbul-instrumenter-loader',
+      options: { esModules: true },
+      enforce: 'post',
+      include: require('path').join(__dirname, '..', 'src'),
+      exclude: [
+        /\.(e2e|spec)\.ts$/,
+        /node_modules/,
+        /(ngfactory|ngstyle)\.js/
+      ]
+    }
+  `;
+
+    const hasIstanbul  = astUtils.filter(parsed, function (node: any) {
+      return (node.type === 'ObjectExpression' && node.properties.find((prop:any) => {
+        return prop.value && prop.value.value === 'istanbul-instrumenter-loader';
+      }));
+    });
+
+    if(hasIstanbul !== null) {
+     return tree;
+    }
+
+    const hasRules  = astUtils.filter(parsed, function (node: any) {
+      return (node.type === 'Identifier' && node.name === 'rules');
+    });
+
+    const hasModule  = astUtils.filter(parsed, function (node: any) {
+      return (node.type === 'Identifier' && node.name === 'module');
+    });
+
+    let targetNode: any = null;
+    let tokenSkip = 0;
+    let codeToInject = extraCfgStr;
+
+    if(hasModule.length === 1) {
+      targetNode = hasModule[0];
+      tokenSkip = 4;
+      codeToInject = 'module: { rules: ['+extraCfgStr+']},';
+    } else if(hasRules === null) {
+      targetNode = hasModule[1];
+      tokenSkip = 2;
+      codeToInject = 'rules: [ '+extraCfgStr+'],';
+    } else {
+      targetNode = hasRules[0];
+      tokenSkip = 2;
+      codeToInject = extraCfgStr+',';
+    }
+
+    const tokenIndex = parsed.tokens.findIndex((token: any) => token.range && token.range[0] === targetNode.range[0]);
+    const targetRange = parsed.tokens[tokenIndex+tokenSkip].range;
+    astUtils.injectCode(parsed, [targetRange[0]+1, targetRange[1]], codeToInject)
+  
+    tree.overwrite(filePath, pretty(astUtils.getCode(parsed), {
+      ...prettierConfig,
+      parser: 'babel'
+    }));
+    return tree;
+  };
+}
+
 function updateJSONFile(filePath: string, newContent: JsonObject): Rule {
   return (tree: Tree, _context: SchematicContext) => {
     const buffer = tree.read(filePath);
@@ -182,12 +275,16 @@ function deleteFromJSONFile(filePath: string, prefix: string, tobeRemoved: JsonO
   };
 }
 
-function addCompoDocScripts(options: ExtendedSchema): Rule {
+function addCompoDocScripts(options: ExtendedSchema, tree: Tree): Rule {
   const title = options.docTitle || `${options.name} Documentation`;
   const output = options.docDir ? `-d ${options.docDir}` : '';
+  let configFile = 'src/tsconfig.app.json';
+  if(!tree.exists(configFile)) {
+    configFile = 'tsconfig.json';
+  }
   return updateJSONFile(`${getBasePath(options)}/package.json`, {
     scripts: {
-      'guard:docs:build': `npx compodoc -p tsconfig.json -n \"${title}\" ${output} --language en-EN`,
+      'guard:docs:build': `npx compodoc -p ${configFile} -n \"${title}\" ${output} --language en-EN`,
       'guard:docs:show': `open ${options.docDir}/index.html`
     }
   });
@@ -201,9 +298,25 @@ function addWebpackBundleAnalyzerScripts(options: ExtendedSchema): Rule {
   });
 }
 
+function addPa11y(options: ExtendedSchema): Rule {
+  return updateJSONFile(`${getBasePath(options)}/package.json`, {
+    scripts: {
+      'guard:a11y': `npx pa11y -c ./pa11y.json`
+    }
+  });
+}
+
+function addNpmAudit(options: ExtendedSchema): Rule {
+  return updateJSONFile(`${getBasePath(options)}/package.json`, {
+    scripts: {
+      'guard:audit': `npx npm-audit-ci-wrapper -t high -p`
+    }
+  });
+}
+
 function addLintScripts(options: ExtendedSchema): Rule {
   let cmd = 'npx eslint src/**/*.ts';
-  if(options.linter === 'tslint') {
+  if (options.linter === 'tslint') {
     cmd = 'npx tslint -p tsconfig.json -c tslint.json';
   }
   return updateJSONFile(`${getBasePath(options)}/package.json`, {
@@ -235,14 +348,18 @@ function addCypressScripts(options: ExtendedSchema): Rule {
 }
 
 function addDevBuilder(options: ExtendedSchema): Rule {
+  let webpackCfg = './tests/coverage.webpack.js';
+  if (!options.new) {
+    webpackCfg = options.customWebpack || webpackCfg;
+  }
   return updateJSONFile(`${getBasePath(options)}/angular.json`, {
     projects: {
       [options.name]: {
         architect: {
-          serve: {
+          'serve': {
             "builder": "ngx-build-plus:dev-server",
             "options": {
-              "extraWebpackConfig": "./tests/coverage.webpack.js"
+              "extraWebpackConfig": webpackCfg
             },
           }
         }
@@ -253,6 +370,8 @@ function addDevBuilder(options: ExtendedSchema): Rule {
 
 export function codeGuard(options: ExtendedSchema): Rule {
   return (tree: Tree, _context: SchematicContext) => {
+
+    checkArgs(options, _context);
 
     const workspaceConfig = tree.read(`${getBasePath(options)}/angular.json`);
     if (!workspaceConfig) {
@@ -335,6 +454,13 @@ export function codeGuard(options: ExtendedSchema): Rule {
         } else {
           return path !== '/sonar-project.properties'
         }
+      }),
+      filter((path) => {
+        if (!options.customWebpack) {
+          return true;
+        } else {
+          return path !== '/tests/coverage.webpack.js'
+        }
       })
     ];
 
@@ -348,10 +474,19 @@ export function codeGuard(options: ExtendedSchema): Rule {
 
     const commonRules = [
       installPackages(tree, _context, options),
-      addCompoDocScripts(options),
+      addCompoDocScripts(options, tree),
       addWebpackBundleAnalyzerScripts(options),
-      addLintScripts(options)
+      addLintScripts(options),
+      addNpmAudit(options)
     ]
+
+    if (!options.new && options.customWebpack) {
+      commonRules.push(updateWebpackConfig(options.customWebpack));
+    }
+    
+    if(options.a11y) {
+      commonRules.push(addPa11y(options));
+    }
 
     if (options.cypressPort) {
       commonRules.push(

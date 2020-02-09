@@ -1,8 +1,8 @@
 {
   "name": "ngx-code-guard",
   "title": "NGX Code Guard",
-  "version": "0.0.1",
-  "description": "The most Code quality control schematic.",
+  "version": "1.0.0",
+  "description": "The most comprehensive code quality control schematic for Angular projects. Sets up the best linters, code checkers, code formatter and testing tools. Provides unified config for IDEs and enforces coding conventions and more!",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && jasmine src/**/*_spec.js"
@@ -11,6 +11,11 @@
     "schematics",
     "angular",
     "quality",
+    "code quality",
+    "testing",
+    "e2e",
+    "accessibility",
+    "best practices",
     "code",
     "lint"
   ],
@@ -31,6 +36,8 @@
     "@angular-devkit/core": "^8.3.23",
     "@angular-devkit/schematics": "^8.3.23",
     "@types/jasmine": "^3.5.1",
+    "escodegen": "^1.13.0",
+    "esprima": "^4.0.1",
     "jasmine": "^3.0.0",
     "lodash": "^4.17.15",
     "prettier": "^1.19.1",
@@ -38,9 +45,12 @@
     "typescript": "^3.7.5"
   },
   "devDependencies": {
+    "@types/escodegen": "0.0.6",
+    "@types/esprima": "^4.0.2",
     "@types/lodash": "^4.14.149",
     "@types/node": "^13.1.8",
     "@types/prettier": "^1.19.0",
+    "esprima-ast-utils": "0.0.7",
     "tslint-to-eslint-config": "^0.5.0"
   }
 }

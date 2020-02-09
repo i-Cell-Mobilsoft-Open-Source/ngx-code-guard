@@ -8,6 +8,10 @@ const path_1 = require("path");
 const child_process_1 = require("child_process");
 const prettier_1 = require("prettier");
 const lodash_1 = require("lodash");
+// import { tokenize } from 'esprima';
+// import { generate } from 'escodegen';
+// import { inspect } from 'util';
+const astUtils = require('esprima-ast-utils');
 let prettierConfig;
 function readFileAsJSON(path) {
     return JSON.parse(fs_1.readFileSync(path).toString());
@@ -25,6 +29,29 @@ function parseHeaders(options) {
         ret[arr[0]] = arr[1];
     });
     return JSON.stringify(ret);
+}
+function checkArgs(options, _context) {
+    try {
+        if (fs_1.existsSync(options.docDir)) {
+            throw new schematics_1.SchematicsException(`The "${options.docDir}" directory already exists!`);
+        }
+        else if (!options.new && !fs_1.existsSync(options.statsFile)) {
+            throw new schematics_1.SchematicsException(`The "${options.statsFile}" doesn't exist!`);
+        }
+        else if (isNaN(parseInt(options.port, 10))) {
+            throw new schematics_1.SchematicsException(`The "${options.port}" is not an integer!`);
+        }
+        else if (isNaN(parseInt(options.cypressPort, 10))) {
+            throw new schematics_1.SchematicsException(`The "${options.cypressPort}" is not an integer!`);
+        }
+        else if (options.customWebpack && !fs_1.existsSync(options.customWebpack)) {
+            throw new schematics_1.SchematicsException(`The "${options.customWebpack}" doesn't exist!`);
+        }
+    }
+    catch (e) {
+        _context.logger.fatal(`ERROR: ${e.message}`);
+        process.exit();
+    }
 }
 function getStyle(project) {
     const schematics = project.schematics || {};
@@ -105,6 +132,64 @@ function applyWithOverwrite(source, rules, options) {
         return rule(tree, _context);
     };
 }
+//@ts-ignore
+function updateWebpackConfig(filePath) {
+    return (tree, _context) => {
+        const buffer = tree.read(filePath);
+        let parsed = astUtils.parse(buffer.toString());
+        astUtils.parentize(parsed);
+        const extraCfgStr = `{
+      test: /\.(js|ts)$/,
+      loader: 'istanbul-instrumenter-loader',
+      options: { esModules: true },
+      enforce: 'post',
+      include: require('path').join(__dirname, '..', 'src'),
+      exclude: [
+        /\.(e2e|spec)\.ts$/,
+        /node_modules/,
+        /(ngfactory|ngstyle)\.js/
+      ]
+    }
+  `;
+        const hasIstanbul = astUtils.filter(parsed, function (node) {
+            return (node.type === 'ObjectExpression' && node.properties.find((prop) => {
+                return prop.value && prop.value.value === 'istanbul-instrumenter-loader';
+            }));
+        });
+        if (hasIstanbul !== null) {
+            return tree;
+        }
+        const hasRules = astUtils.filter(parsed, function (node) {
+            return (node.type === 'Identifier' && node.name === 'rules');
+        });
+        const hasModule = astUtils.filter(parsed, function (node) {
+            return (node.type === 'Identifier' && node.name === 'module');
+        });
+        let targetNode = null;
+        let tokenSkip = 0;
+        let codeToInject = extraCfgStr;
+        if (hasModule.length === 1) {
+            targetNode = hasModule[0];
+            tokenSkip = 4;
+            codeToInject = 'module: { rules: [' + extraCfgStr + ']},';
+        }
+        else if (hasRules === null) {
+            targetNode = hasModule[1];
+            tokenSkip = 2;
+            codeToInject = 'rules: [ ' + extraCfgStr + '],';
+        }
+        else {
+            targetNode = hasRules[0];
+            tokenSkip = 2;
+            codeToInject = extraCfgStr + ',';
+        }
+        const tokenIndex = parsed.tokens.findIndex((token) => token.range && token.range[0] === targetNode.range[0]);
+        const targetRange = parsed.tokens[tokenIndex + tokenSkip].range;
+        astUtils.injectCode(parsed, [targetRange[0] + 1, targetRange[1]], codeToInject);
+        tree.overwrite(filePath, prettier_1.format(astUtils.getCode(parsed), Object.assign(Object.assign({}, prettierConfig), { parser: 'babel' })));
+        return tree;
+    };
+}
 function updateJSONFile(filePath, newContent) {
     return (tree, _context) => {
         const buffer = tree.read(filePath);
@@ -123,12 +208,16 @@ function deleteFromJSONFile(filePath, prefix, tobeRemoved) {
         return tree;
     };
 }
-function addCompoDocScripts(options) {
+function addCompoDocScripts(options, tree) {
     const title = options.docTitle || `${options.name} Documentation`;
     const output = options.docDir ? `-d ${options.docDir}` : '';
+    let configFile = 'src/tsconfig.app.json';
+    if (!tree.exists(configFile)) {
+        configFile = 'tsconfig.json';
+    }
     return updateJSONFile(`${getBasePath(options)}/package.json`, {
         scripts: {
-            'guard:docs:build': `npx compodoc -p tsconfig.json -n \"${title}\" ${output} --language en-EN`,
+            'guard:docs:build': `npx compodoc -p ${configFile} -n \"${title}\" ${output} --language en-EN`,
             'guard:docs:show': `open ${options.docDir}/index.html`
         }
     });
@@ -137,6 +226,20 @@ function addWebpackBundleAnalyzerScripts(options) {
     return updateJSONFile(`${getBasePath(options)}/package.json`, {
         scripts: {
             'guard:analyze': `npx webpack-bundle-analyzer ${options.statsFile}`
+        }
+    });
+}
+function addPa11y(options) {
+    return updateJSONFile(`${getBasePath(options)}/package.json`, {
+        scripts: {
+            'guard:a11y': `npx pa11y -c ./pa11y.json`
+        }
+    });
+}
+function addNpmAudit(options) {
+    return updateJSONFile(`${getBasePath(options)}/package.json`, {
+        scripts: {
+            'guard:audit': `npx npm-audit-ci-wrapper -t high -p`
         }
     });
 }
@@ -172,14 +275,18 @@ function addCypressScripts(options) {
     });
 }
 function addDevBuilder(options) {
+    let webpackCfg = './tests/coverage.webpack.js';
+    if (!options.new) {
+        webpackCfg = options.customWebpack || webpackCfg;
+    }
     return updateJSONFile(`${getBasePath(options)}/angular.json`, {
         projects: {
             [options.name]: {
                 architect: {
-                    serve: {
+                    'serve': {
                         "builder": "ngx-build-plus:dev-server",
                         "options": {
-                            "extraWebpackConfig": "./tests/coverage.webpack.js"
+                            "extraWebpackConfig": webpackCfg
                         },
                     }
                 }
@@ -189,6 +296,7 @@ function addDevBuilder(options) {
 }
 function codeGuard(options) {
     return (tree, _context) => {
+        checkArgs(options, _context);
         const workspaceConfig = tree.read(`${getBasePath(options)}/angular.json`);
         if (!workspaceConfig) {
             throw new schematics_1.SchematicsException('Could not find Angular workspace configuration');
@@ -262,6 +370,14 @@ function codeGuard(options) {
                 else {
                     return path !== '/sonar-project.properties';
                 }
+            }),
+            schematics_1.filter((path) => {
+                if (!options.customWebpack) {
+                    return true;
+                }
+                else {
+                    return path !== '/tests/coverage.webpack.js';
+                }
             })
         ];
         _context.addTask(new tasks_1.NodePackageInstallTask({
@@ -272,10 +388,17 @@ function codeGuard(options) {
         const source = schematics_1.url('./files');
         const commonRules = [
             installPackages(tree, _context, options),
-            addCompoDocScripts(options),
+            addCompoDocScripts(options, tree),
             addWebpackBundleAnalyzerScripts(options),
-            addLintScripts(options)
+            addLintScripts(options),
+            addNpmAudit(options)
         ];
+        if (!options.new && options.customWebpack) {
+            commonRules.push(updateWebpackConfig(options.customWebpack));
+        }
+        if (options.a11y) {
+            commonRules.push(addPa11y(options));
+        }
         if (options.cypressPort) {
             commonRules.push(addCypressScripts(options), addDevBuilder(options));
         }

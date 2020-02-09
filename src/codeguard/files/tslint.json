@@ -1,5 +1,5 @@
 {
-  "extends": ["tslint-config-airbnb", "tslint-consistent-codestyle"],
+  "extends": ["tslint-config-airbnb", "tslint-consistent-codestyle", "tslint-config-prettier"],
   "rulesDirectory": ["node_modules/codelyzer"],
   "rules": {
       <% if(a11y) { %>
@@ -149,6 +149,18 @@
       "template-banana-in-box": true,
       "template-no-negated-async": true,
       "component-class-suffix": [true, "Component"],
-      "directive-class-suffix": [true, "Directive"]
+      "directive-class-suffix": [true, "Directive"],
+      "no-attribute-decorator": true,
+      "no-forward-ref": true,
+      "no-lifecycle-call": true,
+      "no-pipe-impure": true,
+      "no-unused-css": true,
+      "prefer-output-readonly": true,
+      "template-conditional-complexity": [true, 4],
+      "template-cyclomatic-complexity": [true, 5],
+      "template-i18n": [true, "check-id", "check-text"],
+      "template-use-track-by-function": true,
+      "use-component-selector": true,
+      "use-component-view-encapsulation": true
   }
 }

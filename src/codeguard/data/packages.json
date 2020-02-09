@@ -17,7 +17,8 @@
         "pa11y": "^5",
         "webpack-bundle-analyzer": "^3.6",
         "source-map-support": "^0.5",
-        "ts-node": "^8.6"
+        "ts-node": "^8.6",
+        "npm-audit-ci-wrapper": "^2.4"
     },
     "markdown": {
         "markdownlint": "^0.18"
@@ -53,6 +54,7 @@
     "tslint": {
         "tslint": "^5.20",
         "tslint-consistent-codestyle": "^1.16",
-        "tslint-config-airbnb": "^5.11"
+        "tslint-config-airbnb": "^5.11",
+        "tslint-config-prettier": "^1.18"
     }
 }

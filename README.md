@@ -1,60 +1,50 @@
 # NGX Code Guard
 
-Table of Contents
-=================
+# Table of Contents
 
-   * [Features](#features)
-   * [Installation](#installation)
-   * [New Projects](#new-projects)
-   * [Existing projects](#existing-projects)
-   * [Usage](#usage)
-   * [Bugs, features, feedback](#bugs-features-feedback)
+-   [Features](#features)
+-   [Installation](#installation)
+-   [New Projects](#new-projects)
+-   [Existing projects](#existing-projects)
+-   [Usage](#usage)
+-   [Bugs, features, feedback](#bugs-features-feedback)
 
-This is an Angular schematic which aims to improve code quality in general by installing several useful code checkers, validators and and other automated dev tools. 
+This is an Angular schematic which aims to improve code quality in general by installing several useful code checkers, validators and and other automated dev tools.
 
-The goal of this project is to collect all the best code quality control tools / dev tools in one package to provide a way to seamlessly integrate "best practices" into any Angular app.
+The goal of this project is to collect all the best code quality control tools in one package to provide a way to seamlessly integrate them into any Angular app.
+
+The package has been tested with Angular 7, 8 and 9.
+
+**Please note that this package is currently in BETA.**
 
 ### Features
 
 By default, the package does the following.:
 
-- Installs the linter of your choice (TsLint or EsLint).
-- Configures the TypeScript / Javascript linter using strict linting rules.
-- Installs JSONLint to validate JSON files
-- Installs StyleLint to validate style files (SCSS, CSS, SASS or LESS).
-- Configures Git pre-commit hooks for all linters (TS, JS, CSS / SCSS, JSON, MD)
-- Optimizes TypeScript compiler config by enabling all strict checks.
-- Installs and configures Prettier code formatter.
-- Automatically formats all staged files using Prettier.
-- Installs and configures webpack bundle analyzer.
-- Installs and configures commitlint to enforce commit message conventions.
-- Installs and configures Compodoc documentation generator.
-- Installs all dependencies using the package manager of your choice.
-- Generates NPM scripts for all tools. 
+-   Installs the linter of your choice (TsLint or EsLint).
+-   Configures the TypeScript / Javascript linter using strict and "best practice" linting rules.
+-   Installs JSONLint to validate JSON files
+-   Installs StyleLint to validate style files (SCSS, CSS, SASS or LESS).
+-   Configures Git pre-commit hooks for all linters (TS, JS, CSS / SCSS, JSON, MD)
+-   Optimizes TypeScript compiler config by enabling all strict checks.
+-   Installs and configures Prettier code formatter.
+-   Automatically formats all staged files using Prettier.
+-   Installs and configures Webpack Bundle Analyzer.
+-   Installs and configures commitlint to enforce commit message conventions.
+-   Installs and configures Compodoc documentation builder.
+-   Installs all dependencies using the package manager of your choice.
+-   Generates NPM scripts for all tools.
 
 Additionally, this tool also can do the following (and by default, it will):
 
-- Installs and configures Cypress for E2E testing, replacing Protractor. This comes with: 
-    - TypeScript support, so you can write tests in TS instead of JS, 
-    - Test coverage reports (HTML, text and other formats)
-    - Automatic network caching
-    - A11Y plugins for accessibility E2E testing. 
-- Installs and configures Istanbul test coverage reporter.
-- Adds automated A11Y (WCAG 2.x or Section 508) accessibility checkers.
-- Installs and configures Markdownlint for MD validation.
-
-
-### Installation
-
-You can easily use this with Angular CLI.
-
-```bash
-ng add ngx-code-guard
-
-or
-
-npm i ngx-code-guard --save-dev
-```
+-   Installs and configures Cypress for E2E testing, replacing Protractor. This comes with:
+    -   TypeScript support, so you can write tests in TS instead of JS,
+    -   Test coverage reports (HTML, text and other formats)
+    -   Automatic network caching
+    -   A11Y plugins for accessibility E2E testing.
+-   Installs and configures Istanbul test coverage reporter.
+-   Adds automated A11Y (WCAG 2.x or Section 508) accessibility checkers.
+-   Installs and configures Markdownlint for MD validation.
 
 ### New Projects
 
@@ -66,19 +56,24 @@ ng new -c ngx-code-guard --name projectName [options]
 
 ... where "options" means any option you would normally pass to "ng new".
 
-
 ### Existing projects
 
-To add these tools to an existing project, run the following:
-
+To add this tool to an existing project, run the following:
 
 ```bash
-ng g ngx-code-guard:guard 
+ng add ngx-code-guard
+ng g ngx-code-guard:guard
+```
+
+Alternatively, you may also install the package using NPM / Yarn:
+
+```bash
+npm i ngx-code-guard --save-dev
 ```
 
 ### Usage
 
-You may customize the behavior of this tool using various command line options. Almost all of these have meaningful default values, thus in most cases you won't need to override these. However, should you feel the need for it, you may override any flag. Run the command below for a list of all available options.
+You may customize the behavior of this tool using various command line options. Almost all of these have meaningful default values, therefore in most cases you don't need to specify these. However, should you feel the need for it, you may override any flag. Run the command below for a list of all available options.
 
 ```bash
 ng g ngx-code-guard:guard --help
@@ -88,23 +83,26 @@ or
 ng new -c ngx-code-guard --help
 ```
 
-Once the package is installed, in addition to the tools and features described above, you will also have the following useful NPM scripts installed.
-Just execute npm run CMD or yarn CMD to run them:
+Once the package is installed, in addition to the tools and features described above, you will also have the following useful NPM scripts (assuming that you've enabled Cypress and A11Y checks too).
+Just execute "npm run CMD" or "yarn CMD" to run them:
 
-| Command  | Description |
-| -------- | ------------- |
-| guard:docs:build  | Builds HTML docs using Compodoc  |
-| guard:docs:show  | Opens HTML docs generated by Compodoc using the default browser |
-| guard:test:headless  | Runs Cypress tests in headless chrome and prints results to console |
-| guard:test:manual  | Starts up the Cypress test runner app, so you can run test suites manually |
-| guard:test:all  | Runs Cypress tests in Chrome automatically (executes all test suites) |
-| guard:test:report:text  | Generates E2E test coverage reports in text format and prints it to console |
-| guard:test:report:html  | Generates E2E test coverage reports in HTML format and loads it up using the default browser |
-| guard:test:report:summary  | Generates short summary report in text format and prints it to console |
-| guard:analyze  | Starts webpack bundle analyzer  |
-| guard:lint  | Runs the linter and checks TS / JS source code. |
+| Command                   | Description                                                                                  |
+| ------------------------- | -------------------------------------------------------------------------------------------- |
+| guard:analyze             | Starts webpack bundle analyzer. Requires stats JSON data!                                    |
+| guard:audit               | Checks your prod dependencies for security vulnerabilities                                   |
+| guard:lint                | Runs the linter and checks TS / JS source code.                                              |
+| guard:a11y                | Runs automated accessibility (WCAG / Section 508) checks                                     |
+| guard:docs:build          | Builds HTML docs using Compodoc                                                              |
+| guard:docs:show           | Opens HTML docs generated by Compodoc using the default browser                              |
+| guard:test:headless       | Runs Cypress tests in headless chrome and prints results to console                          |
+| guard:test:all            | Runs Cypress tests in Chrome automatically (executes all test suites)                        |
+| guard:test:manual         | Starts up the Cypress test runner app, so you can run test suites manually                   |
+| guard:test:report:text    | Generates E2E test coverage reports in text format and prints it to console                  |
+| guard:test:report:html    | Generates E2E test coverage reports in HTML format and loads it up using the default browser |
+| guard:test:report:summary | Generates short summary report in text format and prints it to console                       |
 
-- **analyze** requires ./stats.json to exist in the project directory. You can generate that using **ng new**.
+-   **analyze** requires a stats JSON data file to exist. You can generate that using **ng build --prod --stats-json**.
+-   **guard:test:report** requires the tests to be executed with code coverage enabled. See next section!
 
 #### Test coverage reports
 
@@ -118,7 +116,7 @@ or
 yarn guard:test:all -e coverage=true
 ```
 
-It is also possible to generate reports in various different formats. 
+It is also possible to generate reports in various different formats.
 
 ```bash
 npx nyc report --reporter=REPORTER_NAME
@@ -126,16 +124,16 @@ npx nyc report --reporter=REPORTER_NAME
 
 For a list of available reporters, please see the [this page](https://istanbul.js.org/docs/advanced/alternative-reporters/).
 
-
 #### Automatic request caching
 
-It is possible to cache network requests, so your app needs to perform them only once and after that each request will be served from the local cache. This can greatly speed up your tests. Enable this by changing the following option in  **cypress.json**: 
+During E2E tests, it is possible to cache network requests, so your app needs to perform them only once and after that each request will be served from the local cache. This can greatly speed up your tests. Enable this feature by changing the following option in **cypress.json**:
 
 ```javascript
 "autorecord": { "forceRecord": true }
 ```
-Run your tests now and network requests will be recorded. Set the option back to "false" to stop recording and start using the cached responses.
 
+Run your tests now and the network requests will be recorded. Set the option to "false" again to stop recording and start using the cached responses.
+All subsequent test runs will use the cache until you clear it by enabling recording again.
 
 For further info on how this works, please see [Cypress autorecord](https://www.npmjs.com/package/cypress-autorecord) plugin docs.
 
@@ -147,5 +145,4 @@ npm run guard:test:all -- -e report=true
 
 Please use our issue tracker to report any bugs, request new features or ask questions.
 
-That's it!
- 
+That's it, have fun! :)

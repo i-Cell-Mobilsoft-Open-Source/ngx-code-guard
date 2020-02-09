@@ -3,10 +3,6 @@
                 "<%= linter %> --fix",
                 "git add"
             ],
-            "*.css": [
-                "stylelint",
-                "git add"
-            ],
             <%= postprocessor %>
             <% if(useMd) { %>
             "*.md": [
@@ -18,7 +14,7 @@
                 "jsonlint",
                 "git add"
             ],
-            "*.{js,ts,html,md,scss,css}": [
+            "*.{js,ts,html,md,svg,scss,css,sass,less}": [
                 "prettier --write",
                 "git add"
             ],

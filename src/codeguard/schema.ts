@@ -17,5 +17,6 @@ export interface Schema {
     cypressPort: number;
     a11y: string;
     statsFile: string;
+    customWebpack: string;
     headers: string[];
   }
