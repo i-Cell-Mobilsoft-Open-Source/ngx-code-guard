@@ -1,10 +1,11 @@
 {
   "name": "ngx-code-guard",
   "title": "NGX Code Guard",
-  "version": "1.0.0",
+  "version": "1.0.0-beta1",
   "description": "The most comprehensive code quality control schematic for Angular projects. Sets up the best linters, code checkers, code formatter and testing tools. Provides unified config for IDEs and enforces coding conventions and more!",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepublish": "npm run build",
     "test": "npm run build && jasmine src/**/*_spec.js"
   },
   "keywords": [
