@@ -29,6 +29,11 @@
             "type": "string",
             "description": "The type of the style engine you wish to use."
         },
+        "sonarURL": {
+            "type": "string",
+            "x-prompt": "The URL of the Sonar server. Leave blank if you don't want to use Sonar.",
+            "description": "The URL of the Sonar server."
+        },
         "sonarId": {
             "type": "string",
             "x-prompt": {

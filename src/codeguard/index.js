@@ -33,19 +33,16 @@ function parseHeaders(options) {
 function checkArgs(options, _context) {
     try {
         if (fs_1.existsSync(options.docDir)) {
-            throw new schematics_1.SchematicsException(`The "${options.docDir}" directory already exists!`);
-        }
-        else if (!options.new && !fs_1.existsSync(options.statsFile)) {
-            throw new schematics_1.SchematicsException(`The "${options.statsFile}" doesn't exist!`);
+            throw new schematics_1.SchematicsException(`The "${options.docDir}" docs directory already exists!`);
         }
         else if (isNaN(parseInt(options.port, 10))) {
-            throw new schematics_1.SchematicsException(`The "${options.port}" is not an integer!`);
+            throw new schematics_1.SchematicsException(`The "${options.port}" port number is not an integer!`);
         }
         else if (isNaN(parseInt(options.cypressPort, 10))) {
-            throw new schematics_1.SchematicsException(`The "${options.cypressPort}" is not an integer!`);
+            throw new schematics_1.SchematicsException(`The "${options.cypressPort}" Cypress port number is not an integer!`);
         }
         else if (options.customWebpack && !fs_1.existsSync(options.customWebpack)) {
-            throw new schematics_1.SchematicsException(`The "${options.customWebpack}" doesn't exist!`);
+            throw new schematics_1.SchematicsException(`The "${options.customWebpack}" webpack config file doesn't exist!`);
         }
     }
     catch (e) {

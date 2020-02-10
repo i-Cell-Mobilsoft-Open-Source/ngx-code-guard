@@ -9,6 +9,7 @@ export interface Schema {
     docDir: string;
     overwrite: boolean;
     ngProject: string;
+    sonarURL: string;
     sonarProject: string;
     sonarExclusions: string;
     sonarId: string;

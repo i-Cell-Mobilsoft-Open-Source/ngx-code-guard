@@ -62,15 +62,13 @@ function parseHeaders(options: ExtendedSchema) {
 function checkArgs(options: ExtendedSchema, _context: SchematicContext) {
   try {
     if(existsSync(options.docDir)) {
-      throw new SchematicsException(`The "${options.docDir}" directory already exists!`)
-    } else if(!options.new && !existsSync(options.statsFile)) {
-      throw new SchematicsException(`The "${options.statsFile}" doesn't exist!`)
+      throw new SchematicsException(`The "${options.docDir}" docs directory already exists!`)
     } else if(isNaN(parseInt(options.port as any, 10))) {
-      throw new SchematicsException(`The "${options.port}" is not an integer!`)
+      throw new SchematicsException(`The "${options.port}" port number is not an integer!`)
     } else if(isNaN(parseInt(options.cypressPort as any, 10))) {
-      throw new SchematicsException(`The "${options.cypressPort}" is not an integer!`)
+      throw new SchematicsException(`The "${options.cypressPort}" Cypress port number is not an integer!`)
     } else if(options.customWebpack && !existsSync(options.customWebpack)) {
-      throw new SchematicsException(`The "${options.customWebpack}" doesn't exist!`)
+      throw new SchematicsException(`The "${options.customWebpack}" webpack config file doesn't exist!`)
     }  
   } catch(e) {
     _context.logger.fatal(`ERROR: ${e.message}`);
