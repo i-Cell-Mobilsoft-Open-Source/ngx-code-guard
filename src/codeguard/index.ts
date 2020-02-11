@@ -24,9 +24,6 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 import { format as pretty, Options as prettierConfig } from 'prettier';
 import { merge as _merge, omit as _omit } from 'lodash';
-// import { tokenize } from 'esprima';
-// import { generate } from 'escodegen';
-// import { inspect } from 'util';
 const astUtils = require('esprima-ast-utils');
 
 let prettierConfig: prettierConfig;
@@ -65,7 +62,7 @@ function checkArgs(options: ExtendedSchema, _context: SchematicContext) {
       throw new SchematicsException(`The "${options.docDir}" docs directory already exists!`)
     } else if(isNaN(parseInt(options.port as any, 10))) {
       throw new SchematicsException(`The "${options.port}" port number is not an integer!`)
-    } else if(isNaN(parseInt(options.cypressPort as any, 10))) {
+    } else if(options.cypressPort && isNaN(parseInt(options.cypressPort as any, 10))) {
       throw new SchematicsException(`The "${options.cypressPort}" Cypress port number is not an integer!`)
     } else if(options.customWebpack && !existsSync(options.customWebpack)) {
       throw new SchematicsException(`The "${options.customWebpack}" webpack config file doesn't exist!`)

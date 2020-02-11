@@ -51,6 +51,7 @@ Additionally, this tool also can do the following (and by default, it will):
 You may generate a new Angular project with all the above extras buy running:
 
 ```bash
+npm i ngx-code-guard
 ng new -c ngx-code-guard --name projectName [options]
 ```
 
@@ -62,7 +63,7 @@ To add this tool to an existing project, run the following:
 
 ```bash
 ng add ngx-code-guard
-ng g ngx-code-guard:guard
+ng g ngx-code-guard:codeguard
 ```
 
 Alternatively, you may also install the package using NPM / Yarn:

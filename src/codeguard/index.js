@@ -8,9 +8,6 @@ const path_1 = require("path");
 const child_process_1 = require("child_process");
 const prettier_1 = require("prettier");
 const lodash_1 = require("lodash");
-// import { tokenize } from 'esprima';
-// import { generate } from 'escodegen';
-// import { inspect } from 'util';
 const astUtils = require('esprima-ast-utils');
 let prettierConfig;
 function readFileAsJSON(path) {
@@ -38,7 +35,7 @@ function checkArgs(options, _context) {
         else if (isNaN(parseInt(options.port, 10))) {
             throw new schematics_1.SchematicsException(`The "${options.port}" port number is not an integer!`);
         }
-        else if (isNaN(parseInt(options.cypressPort, 10))) {
+        else if (options.cypressPort && isNaN(parseInt(options.cypressPort, 10))) {
             throw new schematics_1.SchematicsException(`The "${options.cypressPort}" Cypress port number is not an integer!`);
         }
         else if (options.customWebpack && !fs_1.existsSync(options.customWebpack)) {
