@@ -100,7 +100,7 @@ Just execute "npm run CMD" or "yarn CMD" to run them:
 | guard:test:manual         | Starts up the Cypress test runner app, so you can run test suites manually                   |
 | guard:report:text    | Generates E2E test coverage reports in text format and prints it to console                  |
 | guard:report:html    | Generates E2E test coverage reports in HTML format and loads it up using the default browser |
-| guard:test:report:summary | Generates short summary report in text format and prints it to console                       |
+| guard:report:summary | Generates short summary report in text format and prints it to console                       |
 
 -   **analyze** requires a stats JSON data file to exist. You can generate that using **ng build --prod --stats-json**.
 -   **guard:test:report** requires the tests to be executed with code coverage enabled. See next section!
