@@ -25,6 +25,34 @@
             "x-prompt": "Which linter would you like to use?",
             "description": "The name of the linter you wish to use."
         },
+        "compilerFlags": {
+            "type": "array",
+            "uniqueItems": true,
+            "minItems": 0,
+            "default": [],
+            "x-prompt": {
+                "message": "Compiler flags to be disabled. They are enabled by default.",
+                "type": "list",
+                "multiselect": true,
+                "items": [
+                    "strict",
+                    "noImplicitAny",
+                    "strictNullChecks",
+                    "noUnusedLocals",
+                    "strictFunctionTypes",
+                    "noUnusedParameters",
+                    "noImplicitReturns"
+                ]
+            },
+            "description": "You may disable some of the strict TS compiler flags to prevent certain linter errors. It is however, highly recommended to keep them enabled."
+        },
+        "auditLevel": {
+            "type": "string",
+            "default": "high",
+            "enum": ["low", "moderate", "high", "critical"],
+            "x-prompt": "Security risk level threshold.",
+            "description": "Risks of this level (or higher) will be reported and production build will fail."
+        },
         "style": {
             "type": "string",
             "description": "The type of the style engine you wish to use."
