@@ -1,5 +1,7 @@
 export interface Schema {
     new: boolean;
+    compilerFlags: string[];
+    auditLevel: string;
     commitRule: string;
     packageMgr: string;
     linter: string;

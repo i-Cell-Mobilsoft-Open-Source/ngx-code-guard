@@ -87,6 +87,15 @@ function getStyle(project: experimental.workspace.WorkspaceProject): JsonObject 
   return result;
 }
 
+
+function isWindows() {
+  return process.platform === 'win32';
+}
+
+function fileOpenCommand() {
+  return isWindows() ? 'start' : 'open';
+}
+
 //@ts-ignore
 function installPackages(tree: Tree, _context: SchematicContext, options: ExtendedSchema): Rule {
 
@@ -280,7 +289,7 @@ function addCompoDocScripts(options: ExtendedSchema, tree: Tree): Rule {
   return updateJSONFile(`${getBasePath(options)}/package.json`, {
     scripts: {
       'guard:docs:build': `npx compodoc -p ${configFile} -n \"${title}\" ${output} --language en-EN`,
-      'guard:docs:show': `open ${options.docDir}/index.html`
+      'guard:docs:show': `${fileOpenCommand()} ${options.docDir}/index.html`
     }
   });
 }
@@ -304,7 +313,7 @@ function addPa11y(options: ExtendedSchema): Rule {
 function addNpmAudit(options: ExtendedSchema): Rule {
   return updateJSONFile(`${getBasePath(options)}/package.json`, {
     scripts: {
-      'guard:audit': `npx npm-audit-ci-wrapper -t high -p`
+      'guard:audit': isWindows() ? `npm audit --json | npm-audit-helper --prod-only` : `npx npm-audit-ci-wrapper -t ${options.auditLevel} -p`
     }
   });
 }
@@ -327,7 +336,7 @@ function addCypressScripts(options: ExtendedSchema): Rule {
       "guard:test:headless": `npx cypress run --port ${options.cypressPort}`,
       "guard:test:manual": `npx cypress open  --browser chrome --port ${options.cypressPort}`,
       "guard:test:all": `npx cypress run --browser chrome --port ${options.cypressPort}`,
-      "guard:report:html": "npx nyc report --reporter=lcov && open coverage/lcov-report/index.html",
+      "guard:report:html": `npx nyc report --reporter=lcov && ${fileOpenCommand()} coverage/lcov-report/index.html`,
       "guard:report:text": "npx nyc report --reporter=text",
       "guard:report:summary": "npx nyc report --reporter=text-summary",
     },
@@ -382,11 +391,15 @@ export function codeGuard(options: ExtendedSchema): Rule {
     }
 
     const projectName = options.name as string;
-    const tsConfig = readFileAsJSON(join(__dirname, 'data/tsconfig_partial.json'));
+    const tsConfig = readFileAsJSON(join(__dirname, 'data/tsconfig_partial.json')) as any;
     const project = workspace.projects[projectName];
     prettierConfig = readFileAsJSON(join(__dirname, 'files/.prettierrc'));
     const style = getStyle(project);
 
+
+    for(const rule of options.compilerFlags) {
+      tsConfig.compilerOptions[rule] = false;
+    }
 
     if (options.new) {
       options.style = style.rules as string;
