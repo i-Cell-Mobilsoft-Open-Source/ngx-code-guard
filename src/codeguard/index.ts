@@ -313,7 +313,7 @@ function addPa11y(options: ExtendedSchema): Rule {
 function addNpmAudit(options: ExtendedSchema): Rule {
   return updateJSONFile(`${getBasePath(options)}/package.json`, {
     scripts: {
-      'guard:audit': isWindows() ? `npm audit --json | npm-audit-helper --prod-only` : `npx npm-audit-ci-wrapper -t ${options.auditLevel} -p`
+      'guard:audit': `npx npm-audit-ci-wrapper -t ${options.auditLevel} -p`
     }
   });
 }
