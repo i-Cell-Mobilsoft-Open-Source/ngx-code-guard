@@ -31,7 +31,7 @@
             "minItems": 0,
             "default": [],
             "x-prompt": {
-                "message": "Disable one or more compiler flags. They are enabled by default.",
+                "message": "Compiler flags to be disabled. They are enabled by default.",
                 "type": "list",
                 "multiselect": true,
                 "items": [
@@ -44,7 +44,7 @@
                     "noImplicitReturns"
                 ]
             },
-            "description": "Risks of this level (or higher) will be reported and production build will fail."
+            "description": "You may disable some of the strict TS compiler flags to prevent certain linter errors. It is however, highly recommended to keep them enabled."
         },
         "auditLevel": {
             "type": "string",
