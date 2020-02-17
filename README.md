@@ -17,7 +17,7 @@ The package has been tested with Angular 7, 8 and 9.
 
 **Please note that this package is currently in BETA.**
 
-### Features
+## Features
 
 By default, the package does the following.:
 
@@ -46,6 +46,8 @@ Additionally, this tool also can do the following (and by default, it will):
 -   Adds automated A11Y (WCAG 2.x or Section 508) accessibility checkers.
 -   Installs and configures Markdownlint for MD validation.
 
+## Installation
+
 ### New Projects
 
 You may generate a new Angular project with all the above extras buy running:
@@ -72,7 +74,7 @@ Alternatively, you may also install the package using NPM / Yarn:
 npm i ngx-code-guard --save-dev
 ```
 
-### Usage
+## Usage
 
 You may customize the behavior of this tool using various command line options. Almost all of these have meaningful default values, therefore in most cases you don't need to specify these. However, should you feel the need for it, you may override any flag. Run the command below for a list of all available options.
 
@@ -105,7 +107,7 @@ Just execute "npm run CMD" or "yarn CMD" to run them:
 -   **analyze** requires a stats JSON data file to exist. You can generate that using **ng build --prod --stats-json**.
 -   **guard:test:report** requires the tests to be executed with code coverage enabled. See next section!
 
-#### Test coverage reports
+### Test coverage reports
 
 You may run any of the **guard:test:headless, guard:test:manual or guard:test:all** commands with the **-e coverage=true** flag. This will generate test coverage report which you can view in text and HTML formats. For example, to the view the HTML report, run the following:
 
@@ -125,7 +127,7 @@ npx nyc report --reporter=REPORTER_NAME
 
 For a list of available reporters, please see the [this page](https://istanbul.js.org/docs/advanced/alternative-reporters/).
 
-#### Automatic request caching
+### Automatic request caching
 
 During E2E tests, it is possible to cache network requests, so your app needs to perform them only once and after that each request will be served from the local cache. This can greatly speed up your tests. Enable this feature by changing the following option in **cypress.json**:
 
@@ -142,7 +144,7 @@ For further info on how this works, please see [Cypress autorecord](https://www.
 npm run guard:test:all -- -e report=true
 ```
 
-### Bugs, features, feedback
+## Bugs, features, feedback
 
 Please use our issue tracker to report any bugs, request new features or ask questions.
 
