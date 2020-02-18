@@ -225,7 +225,7 @@ function addCompoDocScripts(options, tree) {
 function addWebpackBundleAnalyzerScripts(options) {
     return updateJSONFile(`${getBasePath(options)}/package.json`, {
         scripts: {
-            'guard:analyze': `npx webpack-bundle-analyzer ${options.statsFile}`
+            'guard:analyze': `npx webpack-bundle-analyzer`
         }
     });
 }

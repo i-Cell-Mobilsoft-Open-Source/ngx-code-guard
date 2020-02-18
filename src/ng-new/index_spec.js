@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = require("tslib");
 const schematics_1 = require("@angular-devkit/schematics");
 const testing_1 = require("@angular-devkit/schematics/testing");
-const path = require("path");
+const path = tslib_1.__importStar(require("path"));
 const collectionPath = path.join(__dirname, '../collection.json');
 describe('ng-new', () => {
     it('works', () => {

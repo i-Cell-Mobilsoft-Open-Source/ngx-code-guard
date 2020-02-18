@@ -297,7 +297,7 @@ function addCompoDocScripts(options: ExtendedSchema, tree: Tree): Rule {
 function addWebpackBundleAnalyzerScripts(options: ExtendedSchema): Rule {
   return updateJSONFile(`${getBasePath(options)}/package.json`, {
     scripts: {
-      'guard:analyze': `npx webpack-bundle-analyzer ${options.statsFile}`
+      'guard:analyze': `npx webpack-bundle-analyzer`
     }
   });
 }
