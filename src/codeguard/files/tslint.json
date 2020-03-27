@@ -1,6 +1,9 @@
 {
   "extends": ["tslint-config-airbnb", "tslint-consistent-codestyle", "tslint-config-prettier"],
   "rulesDirectory": ["node_modules/codelyzer"],
+  "linterOptions": {
+    "exclude": ["./**/*.spec.ts"]
+  },
   "rules": {
       <% if(a11y) { %>
       "template-accessibility-alt-text": true,
@@ -145,7 +148,7 @@
       "no-output-native": true,
       "no-output-on-prefix": true,
       "no-queries-metadata-property": true,
-      "prefer-inline-decorator": true,
+      "prefer-inline-decorator": false,
       "template-banana-in-box": true,
       "template-no-negated-async": true,
       "component-class-suffix": [true, "Component"],
@@ -158,8 +161,8 @@
       "prefer-output-readonly": true,
       "template-conditional-complexity": [true, 4],
       "template-cyclomatic-complexity": [true, 5],
-      "template-i18n": [true, "check-id", "check-text"],
-      "template-use-track-by-function": true,
+      "template-i18n": [false, "check-id", "check-text"],
+      "template-use-track-by-function": false,
       "use-component-selector": true,
       "use-component-view-encapsulation": true
   }

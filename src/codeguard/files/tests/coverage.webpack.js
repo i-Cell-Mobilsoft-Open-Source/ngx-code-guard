@@ -10,9 +10,9 @@ module.exports = {
         exclude: [
           /\.(e2e|spec)\.ts$/,
           /node_modules/,
-          /(ngfactory|ngstyle)\.js/
-        ]
-      }
-    ]
-  }
+          /(ngfactory|ngstyle)\.js/,
+        ],
+      },
+    ],
+  },
 };
