@@ -1,5 +1,5 @@
 {
-  "extends": ["<%= style %>", stylelint-config-prettier"],
+  "extends": ["<%= style %>", "stylelint-config-prettier"],
   "rules": {
     "at-rule-no-unknown": [ true, {
       "ignoreAtRules": [
@@ -7,8 +7,9 @@
         "ignores"
       ]
     }],
-    "indentation": "tab",
+    "no-empty-source": null,
+    "indentation": null,
     "number-leading-zero": null,
-    "unit-whitelist": ["em", "rem", "s"]
+    "unit-whitelist": ["em", "rem", "s", "%"]
   }
 }

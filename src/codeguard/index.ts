@@ -408,14 +408,18 @@ export function codeGuard(options: ExtendedSchema): Rule {
     const templateOptions: any = {
       ...options,
       ...{ headers: parseHeaders(options) },
+      ...{ style: style.rules },
       classify: strings.classify,
       dasherize: strings.dasherize,
     }
 
     if (style.syntax !== 'css') {
-      templateOptions.postprocessor = `"*.${style.syntax}": [
-        "stylelint --syntax=${style.syntax}",
-        "git add"
+      templateOptions.postprocessor = `"*.{${style.syntax},css}": [
+        "stylelint",
+      ],`;
+    } else {
+      templateOptions.postprocessor = `"*.css": [
+        "stylelint --syntax=css",
       ],`;
     }
 

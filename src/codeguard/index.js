@@ -317,11 +317,15 @@ function codeGuard(options) {
         if (options.new) {
             options.style = style.rules;
         }
-        const templateOptions = Object.assign(Object.assign(Object.assign({}, options), { headers: parseHeaders(options) }), { classify: core_1.strings.classify, dasherize: core_1.strings.dasherize });
+        const templateOptions = Object.assign(Object.assign(Object.assign(Object.assign({}, options), { headers: parseHeaders(options) }), { style: style.rules }), { classify: core_1.strings.classify, dasherize: core_1.strings.dasherize });
         if (style.syntax !== 'css') {
-            templateOptions.postprocessor = `"*.${style.syntax}": [
-        "stylelint --syntax=${style.syntax}",
-        "git add"
+            templateOptions.postprocessor = `"*.{${style.syntax},css}": [
+        "stylelint",
+      ],`;
+        }
+        else {
+            templateOptions.postprocessor = `"*.css": [
+        "stylelint --syntax=css",
       ],`;
         }
         const rules = [

@@ -1,21 +1,17 @@
 {
-            "*.{js,ts}": [
+            "*.ts": [
                 "<%= linter %> --fix",
-                "git add"
             ],
             <%= postprocessor %>
             <% if(useMd) { %>
             "*.md": [
                 "markdownlint",
-                "git add"
             ],
              <% } %>
             "*.json": [
                 "jsonlint",
-                "git add"
             ],
-            "*.{js,ts,html,md,svg,scss,css,sass,less}": [
+            "*.{js,ts,html,htm,md,svg,scss,css,sass,less}": [
                 "prettier --write",
-                "git add"
             ],
 }
