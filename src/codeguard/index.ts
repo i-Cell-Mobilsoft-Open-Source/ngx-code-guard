@@ -253,6 +253,20 @@ function updateWebpackConfig(filePath: string): Rule {
   };
 }
 
+function updateGitIgnore(entries: string[]): Rule {
+  return (tree: Tree, _context: SchematicContext) => {
+    const path = '.gitignore';
+    const contents = tree.read(path)?.toString().split('\n') as string[];
+    for(let entry of entries) {
+      if(!contents.find(line => line === entry)) {
+        contents.push(entry);
+      }
+    }
+    tree.overwrite(path, contents.join('\n'));
+    return tree;
+  };
+}
+
 function updateJSONFile(filePath: string, newContent: JsonObject): Rule {
   return (tree: Tree, _context: SchematicContext) => {
     const buffer = tree.read(filePath);
@@ -489,8 +503,12 @@ export function codeGuard(options: ExtendedSchema): Rule {
       addCompoDocScripts(options, tree),
       addWebpackBundleAnalyzerScripts(options),
       addLintScripts(options),
-      addNpmAudit(options)
+      addNpmAudit(options),
     ]
+
+    if(options.docDir) {
+      commonRules.push(updateGitIgnore([options.docDir.charAt(0) === '.' ? options.docDir.substr(1) : options.docDir]));
+    }
 
     if (!options.new && options.customWebpack) {
       commonRules.push(updateWebpackConfig(options.customWebpack));

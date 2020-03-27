@@ -190,6 +190,20 @@ function updateWebpackConfig(filePath) {
         return tree;
     };
 }
+function updateGitIgnore(entries) {
+    return (tree, _context) => {
+        var _a;
+        const path = '.gitignore';
+        const contents = (_a = tree.read(path)) === null || _a === void 0 ? void 0 : _a.toString().split('\n');
+        for (let entry of entries) {
+            if (!contents.find(line => line === entry)) {
+                contents.push(entry);
+            }
+        }
+        tree.overwrite(path, contents.join('\n'));
+        return tree;
+    };
+}
 function updateJSONFile(filePath, newContent) {
     return (tree, _context) => {
         const buffer = tree.read(filePath);
@@ -398,8 +412,11 @@ function codeGuard(options) {
             addCompoDocScripts(options, tree),
             addWebpackBundleAnalyzerScripts(options),
             addLintScripts(options),
-            addNpmAudit(options)
+            addNpmAudit(options),
         ];
+        if (options.docDir) {
+            commonRules.push(updateGitIgnore([options.docDir.charAt(0) === '.' ? options.docDir.substr(1) : options.docDir]));
+        }
         if (!options.new && options.customWebpack) {
             commonRules.push(updateWebpackConfig(options.customWebpack));
         }
