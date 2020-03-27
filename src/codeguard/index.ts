@@ -24,6 +24,7 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 import { format as pretty, Options as prettierConfig } from 'prettier';
 import { merge as _merge, omit as _omit } from 'lodash';
+
 const astUtils = require('esprima-ast-utils');
 
 let prettierConfig: prettierConfig;
@@ -332,14 +333,29 @@ function addNpmAudit(options: ExtendedSchema): Rule {
   });
 }
 
-function addLintScripts(options: ExtendedSchema): Rule {
-  let cmd = 'npx eslint src/**/*.ts';
+function addLintScripts(options: ExtendedSchema, project: experimental.workspace.WorkspaceProject): Rule {
+  let commands = ['npx eslint src/**/*.ts'];
+  const style = getStyle(project);
   if (options.linter === 'tslint') {
-    cmd = 'npx tslint -p tsconfig.json -c tslint.json';
+    commands = ['npx tslint -p tsconfig.json -c tslint.json'];
   }
+
+  if(style.syntax === 'css') {
+    commands.push('npx stylelint "./src/**/*.css" --format=css');
+  } else {
+    commands.push(`npx stylelint "./src/**/*.{${style.syntax},css}"`);
+  }
+
+  commands.push(`npx jsonlint-cli "./src/**/*.{json,JSON}"`);
+
+  if(options.useMd) {
+    const mdGlob = process.platform === 'win32' ? '**/*.{md,MD}' : "'**/*.{md,MD}' ";
+    commands.push(`npx markdownlint ${mdGlob} --ignore node_modules -c mdlint.json`);
+  }
+
   return updateJSONFile(`${getBasePath(options)}/package.json`, {
     scripts: {
-      'guard:lint': cmd
+      'guard:lint': commands.join(' && ')
     }
   });
 }
@@ -404,8 +420,8 @@ export function codeGuard(options: ExtendedSchema): Rule {
       options.name = workspace.defaultProject as string;
     }
 
-    const projectName = options.name as string;
     const tsConfig = readFileAsJSON(join(__dirname, 'data/tsconfig_partial.json')) as any;
+    const projectName = options.name as string;
     const project = workspace.projects[projectName];
     prettierConfig = readFileAsJSON(join(__dirname, 'files/.prettierrc'));
     const style = getStyle(project);
@@ -502,7 +518,7 @@ export function codeGuard(options: ExtendedSchema): Rule {
       installPackages(tree, _context, options),
       addCompoDocScripts(options, tree),
       addWebpackBundleAnalyzerScripts(options),
-      addLintScripts(options),
+      addLintScripts(options, project),
       addNpmAudit(options),
     ]
 
