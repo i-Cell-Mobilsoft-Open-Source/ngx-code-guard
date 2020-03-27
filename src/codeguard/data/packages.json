@@ -10,7 +10,7 @@
         "stylelint-config-prettier": "^8.0",
         "@commitlint/cli": "^8.3",
         "@commitlint/config-angular": "^8.3",
-        "jsonlint": "^1.6",
+        "jsonlint-cli": "^1.0.1",
         "lint-staged": "^10.0.8",
         "husky": "^4.2.3",
         "prettier": "^2.0.0",
@@ -21,7 +21,7 @@
         "npm-audit-ci-wrapper": "^2.4"
     },
     "markdown": {
-        "markdownlint": "^0.18"
+        "markdownlint-cli": "^0.22"
     },
     "cypress": {
         "cypress": "^4.2.0",

@@ -257,14 +257,26 @@ function addNpmAudit(options) {
         }
     });
 }
-function addLintScripts(options) {
-    let cmd = 'npx eslint src/**/*.ts';
+function addLintScripts(options, project) {
+    let commands = ['npx eslint src/**/*.ts'];
+    const style = getStyle(project);
     if (options.linter === 'tslint') {
-        cmd = 'npx tslint -p tsconfig.json -c tslint.json';
+        commands = ['npx tslint -p tsconfig.json -c tslint.json'];
+    }
+    if (style.syntax === 'css') {
+        commands.push('npx stylelint "./src/**/*.css" --format=css');
+    }
+    else {
+        commands.push(`npx stylelint "./src/**/*.{${style.syntax},css}"`);
+    }
+    commands.push(`npx jsonlint-cli "./src/**/*.{json,JSON}"`);
+    if (options.useMd) {
+        const mdGlob = process.platform === 'win32' ? '**/*.{md,MD}' : "'**/*.{md,MD}' ";
+        commands.push(`npx markdownlint ${mdGlob} --ignore node_modules -c mdlint.json`);
     }
     return updateJSONFile(`${getBasePath(options)}/package.json`, {
         scripts: {
-            'guard:lint': cmd
+            'guard:lint': commands.join(' && ')
         }
     });
 }
@@ -320,8 +332,8 @@ function codeGuard(options) {
         if (!options.name) {
             options.name = workspace.defaultProject;
         }
-        const projectName = options.name;
         const tsConfig = readFileAsJSON(path_1.join(__dirname, 'data/tsconfig_partial.json'));
+        const projectName = options.name;
         const project = workspace.projects[projectName];
         prettierConfig = readFileAsJSON(path_1.join(__dirname, 'files/.prettierrc'));
         const style = getStyle(project);
@@ -411,7 +423,7 @@ function codeGuard(options) {
             installPackages(tree, _context, options),
             addCompoDocScripts(options, tree),
             addWebpackBundleAnalyzerScripts(options),
-            addLintScripts(options),
+            addLintScripts(options, project),
             addNpmAudit(options),
         ];
         if (options.docDir) {
