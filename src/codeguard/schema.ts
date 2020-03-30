@@ -17,6 +17,7 @@ export interface Schema {
     sonarExclusions: string;
     sonarId: string;
     useMd: boolean;
+    useSnyk: boolean;
     cypressPort: number;
     a11y: string;
     customWebpack: string;

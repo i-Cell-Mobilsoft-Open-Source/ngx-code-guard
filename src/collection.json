@@ -7,6 +7,10 @@
       "schema": "./codeguard/schema.json",
       "aliases": ["cg"]
     },
+    "command": {
+      "description": "Runs any custom shell command.",
+      "factory": "./codeguard/index#command"
+    },
     "ng-add": {
       "description": "Add this NGX-Codeguard  to the project",
       "factory": "./ng-add/index#ngAdd"
