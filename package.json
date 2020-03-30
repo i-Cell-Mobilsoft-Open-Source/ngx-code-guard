@@ -4,7 +4,7 @@
   "version": "1.0.0-beta7",
   "description": "The most comprehensive code quality control schematic for Angular projects. Sets up the best linters, code checkers, code formatter and testing tools. Provides unified config for IDEs and enforces coding conventions and more!",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json --watch",
     "prepublish": "npm run build",
     "test": "npm run build && jasmine src/**/*_spec.js"
   },
@@ -41,10 +41,11 @@
     "@angular-devkit/schematics": "^8.3.23",
     "escodegen": "^1.13.0",
     "esprima": "^4.0.1",
+    "esprima-ast-utils": "0.0.7",
     "lodash": "^4.17.15",
     "prettier": "^1.19.1",
-    "schematics-utilities": "^2.0.1",
-    "esprima-ast-utils": "0.0.7"
+    "rxjs": "^6.4.0",
+    "schematics-utilities": "^2.0.1"
   },
   "devDependencies": {
     "@types/escodegen": "0.0.6",

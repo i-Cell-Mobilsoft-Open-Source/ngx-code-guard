@@ -16,14 +16,15 @@ import {
 } from '@angular-devkit/schematics';
 
 
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
+import { NodePackageInstallTask, RunSchematicTask } from '@angular-devkit/schematics/tasks';
 import { strings, normalize, experimental, JsonObject } from '@angular-devkit/core';
 import { Schema as NGXCodeGuardSchema } from './schema';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import { execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import { format as pretty, Options as prettierConfig } from 'prettier';
 import { merge as _merge, omit as _omit } from 'lodash';
+import { Observable } from 'rxjs';
 
 const astUtils = require('esprima-ast-utils');
 
@@ -59,16 +60,16 @@ function parseHeaders(options: ExtendedSchema) {
 
 function checkArgs(options: ExtendedSchema, _context: SchematicContext) {
   try {
-    if(existsSync(options.docDir)) {
+    if (existsSync(options.docDir)) {
       throw new SchematicsException(`The "${options.docDir}" docs directory already exists!`)
-    } else if(isNaN(parseInt(options.port as any, 10))) {
+    } else if (isNaN(parseInt(options.port as any, 10))) {
       throw new SchematicsException(`The "${options.port}" port number is not an integer!`)
-    } else if(options.cypressPort && isNaN(parseInt(options.cypressPort as any, 10))) {
+    } else if (options.cypressPort && isNaN(parseInt(options.cypressPort as any, 10))) {
       throw new SchematicsException(`The "${options.cypressPort}" Cypress port number is not an integer!`)
-    } else if(options.customWebpack && !existsSync(options.customWebpack)) {
+    } else if (options.customWebpack && !existsSync(options.customWebpack)) {
       throw new SchematicsException(`The "${options.customWebpack}" webpack config file doesn't exist!`)
-    }  
-  } catch(e) {
+    }
+  } catch (e) {
     _context.logger.fatal(`ERROR: ${e.message}`);
     process.exit();
   }
@@ -129,6 +130,13 @@ function installPackages(tree: Tree, _context: SchematicContext, options: Extend
     rules.push(updateJSONFile(packageJsonPath, {
       //@ts-ignore
       devDependencies: packages.markdown
+    }));
+  }
+
+  if (options.useSnyk) {
+    rules.push(updateJSONFile(packageJsonPath, {
+      //@ts-ignore
+      devDependencies: packages.snyk
     }));
   }
 
@@ -206,21 +214,21 @@ function updateWebpackConfig(filePath: string): Rule {
     }
   `;
 
-    const hasIstanbul  = astUtils.filter(parsed, function (node: any) {
-      return (node.type === 'ObjectExpression' && node.properties.find((prop:any) => {
+    const hasIstanbul = astUtils.filter(parsed, function (node: any) {
+      return (node.type === 'ObjectExpression' && node.properties.find((prop: any) => {
         return prop.value && prop.value.value === 'istanbul-instrumenter-loader';
       }));
     });
 
-    if(hasIstanbul !== null) {
-     return tree;
+    if (hasIstanbul !== null) {
+      return tree;
     }
 
-    const hasRules  = astUtils.filter(parsed, function (node: any) {
+    const hasRules = astUtils.filter(parsed, function (node: any) {
       return (node.type === 'Identifier' && node.name === 'rules');
     });
 
-    const hasModule  = astUtils.filter(parsed, function (node: any) {
+    const hasModule = astUtils.filter(parsed, function (node: any) {
       return (node.type === 'Identifier' && node.name === 'module');
     });
 
@@ -228,24 +236,24 @@ function updateWebpackConfig(filePath: string): Rule {
     let tokenSkip = 0;
     let codeToInject = extraCfgStr;
 
-    if(hasModule.length === 1) {
+    if (hasModule.length === 1) {
       targetNode = hasModule[0];
       tokenSkip = 4;
-      codeToInject = 'module: { rules: ['+extraCfgStr+']},';
-    } else if(hasRules === null) {
+      codeToInject = 'module: { rules: [' + extraCfgStr + ']},';
+    } else if (hasRules === null) {
       targetNode = hasModule[1];
       tokenSkip = 2;
-      codeToInject = 'rules: [ '+extraCfgStr+'],';
+      codeToInject = 'rules: [ ' + extraCfgStr + '],';
     } else {
       targetNode = hasRules[0];
       tokenSkip = 2;
-      codeToInject = extraCfgStr+',';
+      codeToInject = extraCfgStr + ',';
     }
 
     const tokenIndex = parsed.tokens.findIndex((token: any) => token.range && token.range[0] === targetNode.range[0]);
-    const targetRange = parsed.tokens[tokenIndex+tokenSkip].range;
-    astUtils.injectCode(parsed, [targetRange[0]+1, targetRange[1]], codeToInject)
-  
+    const targetRange = parsed.tokens[tokenIndex + tokenSkip].range;
+    astUtils.injectCode(parsed, [targetRange[0] + 1, targetRange[1]], codeToInject)
+
     tree.overwrite(filePath, pretty(astUtils.getCode(parsed), {
       ...prettierConfig,
       parser: 'babel'
@@ -258,8 +266,8 @@ function updateGitIgnore(entries: string[]): Rule {
   return (tree: Tree, _context: SchematicContext) => {
     const path = '.gitignore';
     const contents = tree.read(path)?.toString().split('\n') as string[];
-    for(let entry of entries) {
-      if(!contents.find(line => line === entry)) {
+    for (let entry of entries) {
+      if (!contents.find(line => line === entry)) {
         contents.push(entry);
       }
     }
@@ -298,7 +306,7 @@ function addCompoDocScripts(options: ExtendedSchema, tree: Tree): Rule {
   const title = options.docTitle || `${options.name} Documentation`;
   const output = options.docDir ? `-d ${options.docDir}` : '';
   let configFile = 'src/tsconfig.app.json';
-  if(!tree.exists(configFile)) {
+  if (!tree.exists(configFile)) {
     configFile = 'tsconfig.json';
   }
   return updateJSONFile(`${getBasePath(options)}/package.json`, {
@@ -326,11 +334,48 @@ function addPa11y(options: ExtendedSchema): Rule {
 }
 
 function addNpmAudit(options: ExtendedSchema): Rule {
+  const audit = [`npx audit-ci --report-type summary --pass-enoaudit -${options.auditLevel} --config ./audit-ci.json`];
+  const auditDev = [`npx audit-ci --report-type full -l`];
+  const snyk = 'npx snyk test';
+
+  if (options.useSnyk) {
+    audit.push(snyk);
+    auditDev.push(snyk+' --dev')
+  }
   return updateJSONFile(`${getBasePath(options)}/package.json`, {
     scripts: {
-      'guard:audit': `npx npm-audit-ci-wrapper -t ${options.auditLevel} -p`
+      'guard:audit': `${options.packageMgr} audit && ${auditDev[1] || '""'}`,
+      'guard:audit:ci': audit.join(' && '),
+      'guard:audit:dev': auditDev.join(' && ')
     }
   });
+}
+
+
+function addSnykMonitor(options: ExtendedSchema): Rule {
+  return updateJSONFile(`${getBasePath(options)}/package.json`, {
+    scripts: {
+      'guard:audit:monitor': 'npx snyk monitor'
+    }
+  });
+}
+
+export function command({ command, args }: { command: string; args: string[]; }): Rule {
+  return (host: Tree, _context: SchematicContext) => {
+    return new Observable<Tree>(subscriber => {
+      const child = spawn(command, args, { stdio: 'inherit' });
+      child.on('error', error => {
+        subscriber.error(error);
+      });
+      child.on('close', () => {
+        subscriber.next(host);
+        subscriber.complete();
+      });
+      return () => {
+        child.kill();
+      };
+    });
+  };
 }
 
 function addLintScripts(options: ExtendedSchema, project: experimental.workspace.WorkspaceProject): Rule {
@@ -340,7 +385,7 @@ function addLintScripts(options: ExtendedSchema, project: experimental.workspace
     commands = ['npx tslint -p tsconfig.json -c tslint.json'];
   }
 
-  if(style.syntax === 'css') {
+  if (style.syntax === 'css') {
     commands.push('npx stylelint "./src/**/*.css" --format=css');
   } else {
     commands.push(`npx stylelint "./src/**/*.{${style.syntax},css}"`);
@@ -348,7 +393,7 @@ function addLintScripts(options: ExtendedSchema, project: experimental.workspace
 
   commands.push(`npx jsonlint-cli "./src/**/*.{json,JSON}"`);
 
-  if(options.useMd) {
+  if (options.useMd) {
     const mdGlob = process.platform === 'win32' ? '**/*.{md,MD}' : "'**/*.{md,MD}' ";
     commands.push(`npx markdownlint ${mdGlob} --ignore node_modules -c mdlint.json`);
   }
@@ -424,10 +469,16 @@ export function codeGuard(options: ExtendedSchema): Rule {
     const projectName = options.name as string;
     const project = workspace.projects[projectName];
     prettierConfig = readFileAsJSON(join(__dirname, 'files/.prettierrc'));
+    const packageJsonPath = `${getBasePath(options)}/package.json`;
+    let packageJson: any = {};
+
+    if(tree.exists(packageJsonPath)) {
+      packageJson = JSON.parse(tree.read(`${getBasePath(options)}/package.json`)?.toString() as string);
+    }
     const style = getStyle(project);
 
 
-    for(const rule of options.compilerFlags) {
+    for (const rule of options.compilerFlags) {
       tsConfig.compilerOptions[rule] = false;
     }
 
@@ -437,8 +488,11 @@ export function codeGuard(options: ExtendedSchema): Rule {
 
     const templateOptions: any = {
       ...options,
-      ...{ headers: parseHeaders(options) },
-      ...{ style: style.rules },
+      ...{ 
+        headers: parseHeaders(options),
+        style: style.rules,
+        whitelist: JSON.stringify(Object.keys(packageJson.devDependencies)) 
+      },
       classify: strings.classify,
       dasherize: strings.dasherize,
     }
@@ -512,6 +566,10 @@ export function codeGuard(options: ExtendedSchema): Rule {
       quiet: true
     }));
 
+    if(options.useSnyk) {
+      _context.addTask(new RunSchematicTask('command', { command: 'npx', args: ['snyk', 'auth'] }));
+    }
+
     const source = url('./files');
 
     const commonRules = [
@@ -522,15 +580,19 @@ export function codeGuard(options: ExtendedSchema): Rule {
       addNpmAudit(options),
     ]
 
-    if(options.docDir) {
+    if(options.useSnyk) {
+      commonRules.push(addSnykMonitor(options));
+    }
+
+    if (options.docDir) {
       commonRules.push(updateGitIgnore([options.docDir.charAt(0) === '.' ? options.docDir.substr(1) : options.docDir]));
     }
 
     if (!options.new && options.customWebpack) {
       commonRules.push(updateWebpackConfig(options.customWebpack));
     }
-    
-    if(options.a11y) {
+
+    if (options.a11y) {
       commonRules.push(addPa11y(options));
     }
 

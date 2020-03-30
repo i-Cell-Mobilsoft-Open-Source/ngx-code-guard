@@ -1,0 +1,4 @@
+{
+  "package-manager": "auto",
+  "whitelist": <%= whitelist %>
+}

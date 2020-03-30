@@ -8,6 +8,7 @@ const path_1 = require("path");
 const child_process_1 = require("child_process");
 const prettier_1 = require("prettier");
 const lodash_1 = require("lodash");
+const rxjs_1 = require("rxjs");
 const astUtils = require('esprima-ast-utils');
 let prettierConfig;
 function readFileAsJSON(path) {
@@ -90,6 +91,12 @@ function installPackages(tree, _context, options) {
         rules.push(updateJSONFile(packageJsonPath, {
             //@ts-ignore
             devDependencies: packages.markdown
+        }));
+    }
+    if (options.useSnyk) {
+        rules.push(updateJSONFile(packageJsonPath, {
+            //@ts-ignore
+            devDependencies: packages.snyk
         }));
     }
     if (options.cypressPort) {
@@ -251,12 +258,46 @@ function addPa11y(options) {
     });
 }
 function addNpmAudit(options) {
+    const audit = [`npx audit-ci --report-type summary --pass-enoaudit -${options.auditLevel} --config ./audit-ci.json`];
+    const auditDev = [`npx audit-ci --report-type full -l`];
+    const snyk = 'npx snyk test';
+    if (options.useSnyk) {
+        audit.push(snyk);
+        auditDev.push(snyk + ' --dev');
+    }
     return updateJSONFile(`${getBasePath(options)}/package.json`, {
         scripts: {
-            'guard:audit': `npx npm-audit-ci-wrapper -t ${options.auditLevel} -p`
+            'guard:audit': `${options.packageMgr} audit && ${auditDev[1] || '""'}`,
+            'guard:audit:ci': audit.join(' && '),
+            'guard:audit:dev': auditDev.join(' && ')
         }
     });
 }
+function addSnykMonitor(options) {
+    return updateJSONFile(`${getBasePath(options)}/package.json`, {
+        scripts: {
+            'guard:audit:monitor': 'npx snyk monitor'
+        }
+    });
+}
+function command({ command, args }) {
+    return (host, _context) => {
+        return new rxjs_1.Observable(subscriber => {
+            const child = child_process_1.spawn(command, args, { stdio: 'inherit' });
+            child.on('error', error => {
+                subscriber.error(error);
+            });
+            child.on('close', () => {
+                subscriber.next(host);
+                subscriber.complete();
+            });
+            return () => {
+                child.kill();
+            };
+        });
+    };
+}
+exports.command = command;
 function addLintScripts(options, project) {
     let commands = ['npx eslint src/**/*.ts'];
     const style = getStyle(project);
@@ -322,6 +363,7 @@ function addDevBuilder(options) {
 }
 function codeGuard(options) {
     return (tree, _context) => {
+        var _a;
         checkArgs(options, _context);
         const workspaceConfig = tree.read(`${getBasePath(options)}/angular.json`);
         if (!workspaceConfig) {
@@ -336,6 +378,11 @@ function codeGuard(options) {
         const projectName = options.name;
         const project = workspace.projects[projectName];
         prettierConfig = readFileAsJSON(path_1.join(__dirname, 'files/.prettierrc'));
+        const packageJsonPath = `${getBasePath(options)}/package.json`;
+        let packageJson = {};
+        if (tree.exists(packageJsonPath)) {
+            packageJson = JSON.parse((_a = tree.read(`${getBasePath(options)}/package.json`)) === null || _a === void 0 ? void 0 : _a.toString());
+        }
         const style = getStyle(project);
         for (const rule of options.compilerFlags) {
             tsConfig.compilerOptions[rule] = false;
@@ -343,7 +390,11 @@ function codeGuard(options) {
         if (options.new) {
             options.style = style.rules;
         }
-        const templateOptions = Object.assign(Object.assign(Object.assign(Object.assign({}, options), { headers: parseHeaders(options) }), { style: style.rules }), { classify: core_1.strings.classify, dasherize: core_1.strings.dasherize });
+        const templateOptions = Object.assign(Object.assign(Object.assign({}, options), {
+            headers: parseHeaders(options),
+            style: style.rules,
+            whitelist: JSON.stringify(Object.keys(packageJson.devDependencies))
+        }), { classify: core_1.strings.classify, dasherize: core_1.strings.dasherize });
         if (style.syntax !== 'css') {
             templateOptions.postprocessor = `"*.{${style.syntax},css}": [
         "stylelint",
@@ -418,6 +469,9 @@ function codeGuard(options) {
             workingDirectory: options.new ? options.name : '.',
             quiet: true
         }));
+        if (options.useSnyk) {
+            _context.addTask(new tasks_1.RunSchematicTask('command', { command: 'npx', args: ['snyk', 'auth'] }));
+        }
         const source = schematics_1.url('./files');
         const commonRules = [
             installPackages(tree, _context, options),
@@ -426,6 +480,9 @@ function codeGuard(options) {
             addLintScripts(options, project),
             addNpmAudit(options),
         ];
+        if (options.useSnyk) {
+            commonRules.push(addSnykMonitor(options));
+        }
         if (options.docDir) {
             commonRules.push(updateGitIgnore([options.docDir.charAt(0) === '.' ? options.docDir.substr(1) : options.docDir]));
         }

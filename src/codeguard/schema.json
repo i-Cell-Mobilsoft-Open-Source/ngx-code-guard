@@ -48,9 +48,33 @@
         },
         "auditLevel": {
             "type": "string",
-            "default": "high",
-            "enum": ["low", "moderate", "high", "critical"],
-            "x-prompt": "Security risk level threshold.",
+            "default": "h",
+            "items": {
+                "type": "string"
+            },
+            "x-prompt": {
+                "message": "Security risk level threshold",
+                "type": "list",
+                "items": [
+                    {
+                        "value": "c",
+                        "label": "critical"
+                    },
+                    {
+                        "value": "h",
+                        "label": "high"
+                    },
+                    {
+                        "value": "m",
+                        "label": "moderate"
+                    },
+                    {
+                        "value": "l",
+                        "label": "low"
+                    }
+
+                ]
+            },
             "description": "Risks of this level (or higher) will be reported and production build will fail."
         },
         "style": {
@@ -114,6 +138,12 @@
             "default": false,
             "x-prompt": "Do you wish to use Markdown linting and validation?",
             "description": "Whether or not to use Markdown validation and linting"
+        },
+        "useSnyk": {
+            "type": "boolean",
+            "default": false,
+            "x-prompt": "Do you wish to use Snyk security vulnerability testing?",
+            "description": "Whether or not to use Snyk. This requires a free Snyk account (https://snyk.io/product/)"
         },
         "a11y": {
             "default": "",
