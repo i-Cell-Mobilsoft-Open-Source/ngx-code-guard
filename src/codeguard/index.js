@@ -387,6 +387,7 @@ function codeGuard(options) {
         for (const rule of options.compilerFlags) {
             tsConfig.compilerOptions[rule] = false;
         }
+        tsConfig.compilerOptions.strictPropertyInitialization = !options.compilerFlags.find(flag => flag === 'strictNullChecks');
         if (options.new) {
             options.style = style.rules;
         }
