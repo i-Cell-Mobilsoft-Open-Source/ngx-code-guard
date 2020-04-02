@@ -477,10 +477,11 @@ export function codeGuard(options: ExtendedSchema): Rule {
     }
     const style = getStyle(project);
 
-
     for (const rule of options.compilerFlags) {
       tsConfig.compilerOptions[rule] = false;
     }
+
+    tsConfig.compilerOptions.strictPropertyInitialization = !options.compilerFlags.find(flag => flag === 'strictNullChecks');
 
     if (options.new) {
       options.style = style.rules as string;
@@ -491,7 +492,7 @@ export function codeGuard(options: ExtendedSchema): Rule {
       ...{ 
         headers: parseHeaders(options),
         style: style.rules,
-        whitelist: JSON.stringify(Object.keys(packageJson.devDependencies)) 
+        whitelist: JSON.stringify(Object.keys(packageJson.devDependencies))
       },
       classify: strings.classify,
       dasherize: strings.dasherize,
