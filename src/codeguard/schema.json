@@ -112,7 +112,6 @@
                 "items": [
                     {
                         "value": {
-                            "pkg": "@commitlint/config-angular",
                             "name": "@commitlint/config-angular",
                             "args": {}
                         },
@@ -120,7 +119,6 @@
                     },
                     {
                         "value": {
-                            "config": "commitlint-config-jira",
                             "name": "jira",
                             "args": { "jira": true }
                         },
@@ -128,7 +126,6 @@
                     },
                     {
                         "value": {
-                            "config": "commitlint-config-jira",
                             "name": "jira",
                             "args": { "jira": true, "light": true }
                         },

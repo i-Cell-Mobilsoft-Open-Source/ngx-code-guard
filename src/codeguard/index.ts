@@ -120,9 +120,7 @@ function installPackages(tree: Tree, _context: SchematicContext, options: Extend
   rules.push(updateJSONFile(packageJsonPath, {
     dependencies: packages.dependencies,
     devDependencies: {
-      ...packages.devDependencies as JsonObject, ...{
-        [options.commitRule.pkg]: 'latest'
-      }
+      ...packages.devDependencies as JsonObject
     }
   }));
 
