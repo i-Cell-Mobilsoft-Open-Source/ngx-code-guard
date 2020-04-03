@@ -25,6 +25,7 @@ import { execSync, spawn } from 'child_process';
 import { format as pretty, Options as prettierConfig } from 'prettier';
 import { merge as _merge, omit as _omit } from 'lodash';
 import { Observable } from 'rxjs';
+import  jsonpath  from 'jsonpath';
 
 const astUtils = require('esprima-ast-utils');
 
@@ -75,8 +76,8 @@ function checkArgs(options: ExtendedSchema, _context: SchematicContext) {
   }
 }
 
-function getStyle(project: experimental.workspace.WorkspaceProject): JsonObject {
-  const schematics = project.schematics || {};
+function getStyle(project: experimental.workspace.WorkspaceSchema): JsonObject {
+  const schematics = jsonpath.query(project, '$..schematics')[0];
   const data = Object.keys(schematics);
   let result = {}
   for (const key of data) {
@@ -376,7 +377,7 @@ export function command({ command, args }: { command: string; args: string[]; })
   };
 }
 
-function addLintScripts(options: ExtendedSchema, project: experimental.workspace.WorkspaceProject): Rule {
+function addLintScripts(options: ExtendedSchema, project: experimental.workspace.WorkspaceSchema): Rule {
   let commands = ['npx eslint src/**/*.ts'];
   const style = getStyle(project);
   if (options.linter === 'tslint') {
@@ -464,8 +465,6 @@ export function codeGuard(options: ExtendedSchema): Rule {
     }
 
     const tsConfig = readFileAsJSON(join(__dirname, 'data/tsconfig_partial.json')) as any;
-    const projectName = options.name as string;
-    const project = workspace.projects[projectName];
     prettierConfig = readFileAsJSON(join(__dirname, 'files/.prettierrc'));
     const packageJsonPath = `${getBasePath(options)}/package.json`;
     let packageJson: any = {};
@@ -473,7 +472,8 @@ export function codeGuard(options: ExtendedSchema): Rule {
     if(tree.exists(packageJsonPath)) {
       packageJson = JSON.parse(tree.read(`${getBasePath(options)}/package.json`)?.toString() as string);
     }
-    const style = getStyle(project);
+    
+    const style = getStyle(workspace);
 
     for (const rule of options.compilerFlags) {
       tsConfig.compilerOptions[rule] = false;
@@ -575,7 +575,7 @@ export function codeGuard(options: ExtendedSchema): Rule {
       installPackages(tree, _context, options),
       addCompoDocScripts(options, tree),
       addWebpackBundleAnalyzerScripts(options),
-      addLintScripts(options, project),
+      addLintScripts(options, workspace),
       addNpmAudit(options),
     ]
 
