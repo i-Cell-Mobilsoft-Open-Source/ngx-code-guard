@@ -72,7 +72,6 @@
                         "value": "l",
                         "label": "low"
                     }
-
                 ]
             },
             "description": "Risks of this level (or higher) will be reported and production build will fail."
@@ -105,10 +104,39 @@
             "description": "Comma separated list of paths that should be excluded from Sonar checks."
         },
         "commitRule": {
-            "type": "string",
+            "type": "object",
             "default": "@commitlint/config-angular",
-            "x-prompt": "Name of the shareable commitlint config (NPM package) to use. Defaults to the Angular rule set.",
-            "description": "Name of the shareable commitlint config to  use."
+            "x-prompt": {
+                "type": "list",
+                "message": "What commitlint config would you like to use? Defaults to the Angular conventional commit format.",
+                "items": [
+                    {
+                        "value": {
+                            "pkg": "@commitlint/config-angular",
+                            "name": "@commitlint/config-angular",
+                            "args": {}
+                        },
+                        "label": "Angular conventional commit format"
+                    },
+                    {
+                        "value": {
+                            "config": "commitlint-config-jira",
+                            "name": "jira",
+                            "args": { "jira": true }
+                        },
+                        "label": "Jira conventional commit format"
+                    },
+                    {
+                        "value": {
+                            "config": "commitlint-config-jira",
+                            "name": "jira",
+                            "args": { "jira": true, "light": true }
+                        },
+                        "label": "Modified Jira conventional commit format  (no project key checks, uppercase iDSs)"
+                    }
+                ]
+            },
+            "description": "Name of the shareable commitlint config to use."
         },
         "docTitle": {
             "type": "string",
@@ -175,7 +203,6 @@
                         "value": "",
                         "label": "None"
                     }
-
                 ]
             },
             "description": "Whether or not to use Codelyzer's experimental A11Y rules as well as the PA11Y tester tool. If you enabled Cypress, this will also install AXE plugins for Cypress. Defaults to None."

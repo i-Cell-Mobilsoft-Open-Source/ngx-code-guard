@@ -10,6 +10,8 @@
         "stylelint-config-prettier": "^8.0",
         "@commitlint/cli": "^8.3",
         "@commitlint/config-angular": "^8.3",
+        "commitlint-plugin-jira-rules": "^1.4.0",
+        "commitlint-config-jira": "^1.4.0",
         "jsonlint-cli": "^1.0.1",
         "lint-staged": "^10.0.8",
         "husky": "^4.2.3",

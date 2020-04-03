@@ -2,7 +2,9 @@ export interface Schema {
     new: boolean;
     compilerFlags: string[];
     auditLevel: string;
-    commitRule: string;
+    commitRule: {
+        [prop: string]: any;
+    };
     packageMgr: string;
     linter: string;
     style: string;

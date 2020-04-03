@@ -84,7 +84,7 @@ function installPackages(tree, _context, options) {
     rules.push(updateJSONFile(packageJsonPath, {
         dependencies: packages.dependencies,
         devDependencies: Object.assign(Object.assign({}, packages.devDependencies), {
-            [options.commitRule]: 'latest'
+            [options.commitRule.pkg]: 'latest'
         })
     }));
     if (options.useMd) {

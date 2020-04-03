@@ -121,7 +121,7 @@ function installPackages(tree: Tree, _context: SchematicContext, options: Extend
     dependencies: packages.dependencies,
     devDependencies: {
       ...packages.devDependencies as JsonObject, ...{
-        [options.commitRule]: 'latest'
+        [options.commitRule.pkg]: 'latest'
       }
     }
   }));
