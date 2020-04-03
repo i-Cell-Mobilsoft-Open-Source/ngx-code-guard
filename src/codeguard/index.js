@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = require("tslib");
 const schematics_1 = require("@angular-devkit/schematics");
 const tasks_1 = require("@angular-devkit/schematics/tasks");
 const core_1 = require("@angular-devkit/core");
@@ -9,6 +10,7 @@ const child_process_1 = require("child_process");
 const prettier_1 = require("prettier");
 const lodash_1 = require("lodash");
 const rxjs_1 = require("rxjs");
+const jsonpath_1 = tslib_1.__importDefault(require("jsonpath"));
 const astUtils = require('esprima-ast-utils');
 let prettierConfig;
 function readFileAsJSON(path) {
@@ -49,7 +51,7 @@ function checkArgs(options, _context) {
     }
 }
 function getStyle(project) {
-    const schematics = project.schematics || {};
+    const schematics = jsonpath_1.default.query(project, '$..schematics')[0];
     const data = Object.keys(schematics);
     let result = {};
     for (const key of data) {
@@ -373,15 +375,13 @@ function codeGuard(options) {
             options.name = workspace.defaultProject;
         }
         const tsConfig = readFileAsJSON(path_1.join(__dirname, 'data/tsconfig_partial.json'));
-        const projectName = options.name;
-        const project = workspace.projects[projectName];
         prettierConfig = readFileAsJSON(path_1.join(__dirname, 'files/.prettierrc'));
         const packageJsonPath = `${getBasePath(options)}/package.json`;
         let packageJson = {};
         if (tree.exists(packageJsonPath)) {
             packageJson = JSON.parse((_a = tree.read(`${getBasePath(options)}/package.json`)) === null || _a === void 0 ? void 0 : _a.toString());
         }
-        const style = getStyle(project);
+        const style = getStyle(workspace);
         for (const rule of options.compilerFlags) {
             tsConfig.compilerOptions[rule] = false;
         }
@@ -476,7 +476,7 @@ function codeGuard(options) {
             installPackages(tree, _context, options),
             addCompoDocScripts(options, tree),
             addWebpackBundleAnalyzerScripts(options),
-            addLintScripts(options, project),
+            addLintScripts(options, workspace),
             addNpmAudit(options),
         ];
         if (options.useSnyk) {

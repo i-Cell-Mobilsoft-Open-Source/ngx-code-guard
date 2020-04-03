@@ -1,7 +1,7 @@
 {
   "name": "ngx-code-guard",
   "title": "NGX Code Guard",
-  "version": "1.0.0-beta10",
+  "version": "1.0.0-beta11",
   "description": "The most comprehensive code quality control schematic for Angular projects. Sets up the best linters, code checkers, code formatter and testing tools. Provides unified config for IDEs and enforces coding conventions and more!",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -43,6 +43,7 @@
     "escodegen": "^1.13.0",
     "esprima": "^4.0.1",
     "esprima-ast-utils": "0.0.7",
+    "jsonpath": "^1.0.2",
     "lodash": "^4.17.15",
     "prettier": "^1.19.1",
     "rxjs": "^6.4.0",
@@ -51,6 +52,7 @@
   "devDependencies": {
     "@types/escodegen": "0.0.6",
     "@types/esprima": "^4.0.2",
+    "@types/jsonpath": "^0.2.0",
     "@types/lodash": "^4.14.149",
     "@types/node": "^13.1.8",
     "@types/prettier": "^1.19.0",

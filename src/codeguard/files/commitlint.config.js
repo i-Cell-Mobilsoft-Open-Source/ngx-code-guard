@@ -5,7 +5,8 @@ module.exports = {
   rules: {
     <% if(commitRule.args.light) { %>
     'jira-task-id-project-key': [2, 'never', 0],
-    'jira-commit-status-case': [2, 'always', 'uppercase']
+    'jira-commit-status-case': [2, 'always', 'uppercase'],
+    'jira-task-id-max-length': [2, 'always', 25]
     <% } %>
   }
   <% } %>
