@@ -302,16 +302,14 @@ function deleteFromJSONFile(filePath: string, prefix: string, tobeRemoved: JsonO
 }
 
 function addCompoDocScripts(options: ExtendedSchema, tree: Tree): Rule {
-  const title = options.docTitle || `${options.name} Documentation`;
-  const output = options.docDir ? `-d ${options.docDir}` : '';
   let configFile = 'src/tsconfig.app.json';
   if (!tree.exists(configFile)) {
     configFile = 'tsconfig.json';
   }
   return updateJSONFile(`${getBasePath(options)}/package.json`, {
     scripts: {
-      'guard:docs:build': `npx compodoc -p ${configFile} -n \"${title}\" ${output} --language en-EN`,
-      'guard:docs:show': `${fileOpenCommand()} ${options.docDir}/index.html`
+      'guard:docs:build': `npx compodoc --language ${options.docLocale}`,
+      'guard:docs:show': `npx compodoc -s --language ${options.docLocale}`
     }
   });
 }
@@ -484,6 +482,8 @@ export function codeGuard(options: ExtendedSchema): Rule {
     if (options.new) {
       options.style = style.rules as string;
     }
+
+    options.docTitle = options.docTitle || `${options.name} Documentation`;
 
     const templateOptions: any = {
       ...options,

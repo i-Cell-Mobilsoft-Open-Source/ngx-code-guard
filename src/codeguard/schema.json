@@ -146,6 +146,12 @@
             "x-prompt": "Path to the directory the Compodoc generated documentation should be placed at. This already shouldn't exist. Defaults to: './docs'",
             "description": "Path to the directory the Compodoc generated documentation should be placed at."
         },
+        "docLocale": {
+            "type": "string",
+            "default": "en-US",
+            "x-prompt": "Language of the Compodoc generated documentation. Please provide 4 characters IETF tag.",
+            "description": "IETF language tag of the Compodoc generated documentation."
+        },
         "port": {
             "type": "string",
             "default": "4200",

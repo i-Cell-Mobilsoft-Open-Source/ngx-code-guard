@@ -11,6 +11,7 @@ export interface Schema {
     port: number;
     docTitle: string;
     docDir: string;
+    docLocale: string;
     overwrite: boolean;
     ngProject: string;
     sonarURL: string;
