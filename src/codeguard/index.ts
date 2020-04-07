@@ -566,7 +566,7 @@ export function codeGuard(options: ExtendedSchema): Rule {
     }));
 
     if(options.useSnyk) {
-      _context.addTask(new RunSchematicTask('command', { command: 'npx', args: ['snyk', 'auth'] }));
+      _context.addTask(new RunSchematicTask('command', { command: isWindows() ? 'npx.cmd' : 'npx', args: ['snyk', 'auth'] }));
     }
 
     const source = url('./files');

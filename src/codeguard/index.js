@@ -468,7 +468,7 @@ function codeGuard(options) {
             quiet: true
         }));
         if (options.useSnyk) {
-            _context.addTask(new tasks_1.RunSchematicTask('command', { command: 'npx', args: ['snyk', 'auth'] }));
+            _context.addTask(new tasks_1.RunSchematicTask('command', { command: isWindows() ? 'npx.cmd' : 'npx', args: ['snyk', 'auth'] }));
         }
         const source = schematics_1.url('./files');
         const commonRules = [
