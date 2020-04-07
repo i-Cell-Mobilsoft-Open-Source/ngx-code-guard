@@ -1,0 +1,5 @@
+{
+  "tsconfig": "tsconfig.json",
+  "name": "<%= docTitle %>",
+  "output": "<%= docDir %>"
+}

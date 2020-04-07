@@ -230,16 +230,14 @@ function deleteFromJSONFile(filePath, prefix, tobeRemoved) {
     };
 }
 function addCompoDocScripts(options, tree) {
-    const title = options.docTitle || `${options.name} Documentation`;
-    const output = options.docDir ? `-d ${options.docDir}` : '';
     let configFile = 'src/tsconfig.app.json';
     if (!tree.exists(configFile)) {
         configFile = 'tsconfig.json';
     }
     return updateJSONFile(`${getBasePath(options)}/package.json`, {
         scripts: {
-            'guard:docs:build': `npx compodoc -p ${configFile} -n \"${title}\" ${output} --language en-EN`,
-            'guard:docs:show': `${fileOpenCommand()} ${options.docDir}/index.html`
+            'guard:docs:build': `npx compodoc --language ${options.docLocale}`,
+            'guard:docs:show': `npx compodoc -s --language ${options.docLocale}`
         }
     });
 }
@@ -389,6 +387,7 @@ function codeGuard(options) {
         if (options.new) {
             options.style = style.rules;
         }
+        options.docTitle = options.docTitle || `${options.name} Documentation`;
         const templateOptions = Object.assign(Object.assign(Object.assign({}, options), {
             headers: parseHeaders(options),
             style: style.rules,
