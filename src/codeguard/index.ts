@@ -556,6 +556,14 @@ export function codeGuard(options: ExtendedSchema): Rule {
         } else {
           return path !== '/tests/coverage.webpack.js'
         }
+      }),
+      filter((path) => {
+        const blistpath  = '/browserslist';
+        if (!tree.exists(blistpath)) {
+          return true;
+        } else {
+          return path !== blistpath;
+        }
       })
     ];
 

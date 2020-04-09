@@ -460,6 +460,15 @@ function codeGuard(options) {
                 else {
                     return path !== '/tests/coverage.webpack.js';
                 }
+            }),
+            schematics_1.filter((path) => {
+                const blistpath = '/browserslist';
+                if (!tree.exists(blistpath)) {
+                    return true;
+                }
+                else {
+                    return path !== blistpath;
+                }
             })
         ];
         _context.addTask(new tasks_1.NodePackageInstallTask({
