@@ -53,12 +53,16 @@ function checkArgs(options, _context) {
 function getStyle(project) {
     const schematics = jsonpath_1.default.query(project, '$..schematics')[0];
     const data = Object.keys(schematics);
-    let result = {};
+    let result = null;
     for (const key of data) {
-        if (schematics[key].style) {
-            result = schematics[key].style === 'css' ? { syntax: 'css', rules: 'stylelint-config-recommended' }
-                : { syntax: schematics[key].style, rules: 'stylelint-config-recommended-scss' };
+        const styleKey = schematics[key].style ? 'style' : 'styleext';
+        if (schematics[key][styleKey]) {
+            result = schematics[key][styleKey] === 'css' ? { syntax: 'css', rules: 'stylelint-config-recommended' }
+                : { syntax: schematics[key][styleKey], rules: 'stylelint-config-recommended-scss' };
         }
+    }
+    if (!result) {
+        throw new schematics_1.SchematicsException('Could not identify project style config..');
     }
     return result;
 }

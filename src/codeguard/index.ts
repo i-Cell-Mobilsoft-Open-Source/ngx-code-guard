@@ -25,7 +25,7 @@ import { execSync, spawn } from 'child_process';
 import { format as pretty, Options as prettierConfig } from 'prettier';
 import { merge as _merge, omit as _omit } from 'lodash';
 import { Observable } from 'rxjs';
-import  jsonpath  from 'jsonpath';
+import jsonpath from 'jsonpath';
 
 const astUtils = require('esprima-ast-utils');
 
@@ -79,12 +79,17 @@ function checkArgs(options: ExtendedSchema, _context: SchematicContext) {
 function getStyle(project: experimental.workspace.WorkspaceSchema): JsonObject {
   const schematics = jsonpath.query(project, '$..schematics')[0];
   const data = Object.keys(schematics);
-  let result = {}
+  let result = null;
   for (const key of data) {
-    if (schematics[key].style) {
-      result = schematics[key].style === 'css' ? { syntax: 'css', rules: 'stylelint-config-recommended' }
-        : { syntax: schematics[key].style, rules: 'stylelint-config-recommended-scss' };
+    const styleKey = schematics[key].style ? 'style' : 'styleext';
+    if (schematics[key][styleKey]) {
+      result = schematics[key][styleKey] === 'css' ? { syntax: 'css', rules: 'stylelint-config-recommended' }
+        : { syntax: schematics[key][styleKey], rules: 'stylelint-config-recommended-scss' };
     }
+  }
+
+  if (!result) {
+    throw new SchematicsException('Could not identify project style config..');
   }
 
   return result;
@@ -337,7 +342,7 @@ function addNpmAudit(options: ExtendedSchema): Rule {
 
   if (options.useSnyk) {
     audit.push(snyk);
-    auditDev.push(snyk+' --dev')
+    auditDev.push(snyk + ' --dev')
   }
   return updateJSONFile(`${getBasePath(options)}/package.json`, {
     scripts: {
@@ -467,10 +472,10 @@ export function codeGuard(options: ExtendedSchema): Rule {
     const packageJsonPath = `${getBasePath(options)}/package.json`;
     let packageJson: any = {};
 
-    if(tree.exists(packageJsonPath)) {
+    if (tree.exists(packageJsonPath)) {
       packageJson = JSON.parse(tree.read(`${getBasePath(options)}/package.json`)?.toString() as string);
     }
-    
+
     const style = getStyle(workspace);
 
     for (const rule of options.compilerFlags) {
@@ -487,7 +492,7 @@ export function codeGuard(options: ExtendedSchema): Rule {
 
     const templateOptions: any = {
       ...options,
-      ...{ 
+      ...{
         headers: parseHeaders(options),
         style: style.rules,
         whitelist: JSON.stringify(Object.keys(packageJson.devDependencies))
@@ -558,7 +563,7 @@ export function codeGuard(options: ExtendedSchema): Rule {
         }
       }),
       filter((path) => {
-        const blistpath  = '/browserslist';
+        const blistpath = '/browserslist';
         if (!tree.exists(blistpath)) {
           return true;
         } else {
@@ -573,7 +578,7 @@ export function codeGuard(options: ExtendedSchema): Rule {
       quiet: true
     }));
 
-    if(options.useSnyk) {
+    if (options.useSnyk) {
       _context.addTask(new RunSchematicTask('command', { command: isWindows() ? 'npx.cmd' : 'npx', args: ['snyk', 'auth'] }));
     }
 
@@ -587,7 +592,7 @@ export function codeGuard(options: ExtendedSchema): Rule {
       addNpmAudit(options),
     ]
 
-    if(options.useSnyk) {
+    if (options.useSnyk) {
       commonRules.push(addSnykMonitor(options));
     }
 
