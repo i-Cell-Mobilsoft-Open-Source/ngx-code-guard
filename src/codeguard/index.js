@@ -50,15 +50,21 @@ function checkArgs(options, _context) {
         process.exit();
     }
 }
-function getStyle(project) {
-    const schematics = jsonpath_1.default.query(project, '$..schematics')[0];
-    const data = Object.keys(schematics);
+function getStyle(workspace, options) {
+    let schematics = jsonpath_1.default.query(workspace.projects[options.name], '$..schematics');
     let result = null;
-    for (const key of data) {
-        const styleKey = schematics[key].style ? 'style' : 'styleext';
-        if (schematics[key][styleKey]) {
-            result = schematics[key][styleKey] === 'css' ? { syntax: 'css', rules: 'stylelint-config-recommended' }
-                : { syntax: schematics[key][styleKey], rules: 'stylelint-config-recommended-scss' };
+    if (!schematics.length) {
+        schematics = jsonpath_1.default.query(workspace, '$..schematics');
+    }
+    for (const schematic of schematics) {
+        const data = Object.keys(schematic);
+        for (const key of data) {
+            const styleKey = schematic[key].style ? 'style' : 'styleext';
+            if (schematic[key][styleKey]) {
+                result = schematic[key][styleKey] === 'css' ? { syntax: 'css', rules: 'stylelint-config-recommended' }
+                    : { syntax: schematic[key][styleKey], rules: 'stylelint-config-recommended-scss' };
+                break;
+            }
         }
     }
     if (!result) {
@@ -302,7 +308,7 @@ function command({ command, args }) {
 exports.command = command;
 function addLintScripts(options, project) {
     let commands = ['npx eslint src/**/*.ts'];
-    const style = getStyle(project);
+    const style = getStyle(project, options);
     if (options.linter === 'tslint') {
         commands = ['npx tslint -p tsconfig.json -c tslint.json'];
     }
@@ -383,7 +389,7 @@ function codeGuard(options) {
         if (tree.exists(packageJsonPath)) {
             packageJson = JSON.parse((_a = tree.read(`${getBasePath(options)}/package.json`)) === null || _a === void 0 ? void 0 : _a.toString());
         }
-        const style = getStyle(workspace);
+        const style = getStyle(workspace, options);
         for (const rule of options.compilerFlags) {
             tsConfig.compilerOptions[rule] = false;
         }

@@ -76,15 +76,21 @@ function checkArgs(options: ExtendedSchema, _context: SchematicContext) {
   }
 }
 
-function getStyle(project: experimental.workspace.WorkspaceSchema): JsonObject {
-  const schematics = jsonpath.query(project, '$..schematics')[0];
-  const data = Object.keys(schematics);
-  let result = null;
-  for (const key of data) {
-    const styleKey = schematics[key].style ? 'style' : 'styleext';
-    if (schematics[key][styleKey]) {
-      result = schematics[key][styleKey] === 'css' ? { syntax: 'css', rules: 'stylelint-config-recommended' }
-        : { syntax: schematics[key][styleKey], rules: 'stylelint-config-recommended-scss' };
+function getStyle(workspace: experimental.workspace.WorkspaceSchema, options: ExtendedSchema): JsonObject {
+  let schematics = jsonpath.query(workspace.projects[options.name], '$..schematics');
+  let result:any = null;
+  if(!schematics.length) {
+    schematics = jsonpath.query(workspace, '$..schematics');
+  }
+  for(const schematic of schematics) {
+    const data = Object.keys(schematic);
+    for (const key of data) {
+      const styleKey = schematic[key as string].style ? 'style' : 'styleext';
+      if (schematic[key as string][styleKey]) {
+        result = schematic[key as string][styleKey] === 'css' ? { syntax: 'css', rules: 'stylelint-config-recommended' }
+          : { syntax: schematic[key as string][styleKey], rules: 'stylelint-config-recommended-scss' };
+        break;
+      }
     }
   }
 
@@ -382,7 +388,7 @@ export function command({ command, args }: { command: string; args: string[]; })
 
 function addLintScripts(options: ExtendedSchema, project: experimental.workspace.WorkspaceSchema): Rule {
   let commands = ['npx eslint src/**/*.ts'];
-  const style = getStyle(project);
+  const style = getStyle(project, options);
   if (options.linter === 'tslint') {
     commands = ['npx tslint -p tsconfig.json -c tslint.json'];
   }
@@ -476,7 +482,7 @@ export function codeGuard(options: ExtendedSchema): Rule {
       packageJson = JSON.parse(tree.read(`${getBasePath(options)}/package.json`)?.toString() as string);
     }
 
-    const style = getStyle(workspace);
+    const style = getStyle(workspace, options);
 
     for (const rule of options.compilerFlags) {
       tsConfig.compilerOptions[rule] = false;
