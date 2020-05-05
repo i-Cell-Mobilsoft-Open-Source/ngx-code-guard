@@ -31,7 +31,7 @@
             "minItems": 0,
             "default": [],
             "x-prompt": {
-                "message": "Compiler flags to be disabled. They are enabled by default.",
+                "message": "Compiler flags to be disabled. They are all enabled by default.",
                 "type": "list",
                 "multiselect": true,
                 "items": [
@@ -105,10 +105,13 @@
         },
         "commitRule": {
             "type": "object",
-            "default": "@commitlint/config-angular",
+            "default":  {
+                "name": "@commitlint/config-angular",
+                "args": {}
+            },
             "x-prompt": {
                 "type": "list",
-                "message": "What commitlint config would you like to use? Defaults to the Angular conventional commit format.",
+                "message": "What commitlint config would you like to use?",
                 "items": [
                     {
                         "value": {
@@ -143,7 +146,7 @@
         "docDir": {
             "type": "string",
             "default": "./docs",
-            "x-prompt": "Path to the directory the Compodoc generated documentation should be placed at. This already shouldn't exist. Defaults to: './docs'",
+            "x-prompt": "Path to the directory the Compodoc generated documentation should be placed at. This must not exist. Defaults to: './docs'",
             "description": "Path to the directory the Compodoc generated documentation should be placed at."
         },
         "docLocale": {
@@ -212,7 +215,7 @@
         },
         "customWebpack": {
             "type": "string",
-            "default": "webpack.config.js",
+            "default": "",
             "x-prompt": "Path to custom web webpack config file. Leave blank if there is none.",
             "description": "Path to custom web webpack config file"
         },
