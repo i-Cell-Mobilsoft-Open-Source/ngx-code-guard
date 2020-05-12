@@ -307,27 +307,34 @@ function command({ command, args }) {
 }
 exports.command = command;
 function addLintScripts(options, project) {
-    let commands = ['npx eslint src/**/*.ts'];
+    let npxCommands = [['guard:eslint', 'npx eslint src/**/*.ts']];
+    let npmCommands = ['npm run guard:eslint'];
     const style = getStyle(project, options);
     if (options.linter === 'tslint') {
-        commands = ['npx tslint -p tsconfig.json -c tslint.json'];
+        npxCommands = [['guard:tslint', 'npx tslint -p tsconfig.json -c tslint.json']];
+        npmCommands = ['npm run guard:eslint'];
     }
     if (style.syntax === 'css') {
-        commands.push('npx stylelint "./src/**/*.css" --format=css');
+        npxCommands.push(['guard:stylelint', 'npx stylelint "./src/**/*.css" --format=css']);
+        npmCommands.push('npm run guard:stylelint');
     }
     else {
-        commands.push(`npx stylelint "./src/**/*.{${style.syntax},css}"`);
+        npxCommands.push(['guard:stylelint', `npx stylelint "./src/**/*.{${style.syntax},css}"`]);
+        npmCommands.push('npm run guard:stylelint');
     }
-    commands.push(`npx jsonlint-cli "./src/**/*.{json,JSON}"`);
+    npxCommands.push(['guard:jsonlint', `npx jsonlint-cli "./src/**/*.{json,JSON}"`]);
+    npmCommands.push('npm run guard:jsonlint');
     if (options.useMd) {
         const mdGlob = process.platform === 'win32' ? '**/*.{md,MD}' : "'**/*.{md,MD}' ";
-        commands.push(`npx markdownlint ${mdGlob} --ignore node_modules -c mdlint.json`);
+        npxCommands.push(['guard:markdownlint', `npx markdownlint ${mdGlob} -i 'node_modules/**' -i '**/node_modules/**' -c mdlint.json`]);
+        npmCommands.push('npm run guard:markdownlint');
     }
-    return updateJSONFile(`${getBasePath(options)}/package.json`, {
-        scripts: {
-            'guard:lint': commands.join(' && ')
-        }
+    npxCommands = [['guard:lint', npmCommands.join(' && ')]];
+    let packageMock = { scripts: {} };
+    npxCommands.forEach((scriptsDescription) => {
+        packageMock.scripts = Object.assign({}, packageMock.scripts, { [scriptsDescription[0]]: scriptsDescription[1] });
     });
+    return updateJSONFile(`${getBasePath(options)}/package.json`, packageMock);
 }
 function addCypressScripts(options) {
     return updateJSONFile(`${getBasePath(options)}/package.json`, {
