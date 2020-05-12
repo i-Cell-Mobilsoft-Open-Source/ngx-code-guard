@@ -234,7 +234,17 @@
             },
             "default": [],
             "description": "Comma separated list of HTTP headers in headerName:headerValue format, that should be passed to each page while running PA11Y."
+        },
+        "useConfig": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, the options passed will be saved to config file ./.codeguardrc."
+        },
+        "saveConfig": {
+            "type": "boolean",
+            "default": true,
+            "description": "If false, don't save passed options to config file."
         }
     },
-    "required": ["port"]
+    "required": []
 }

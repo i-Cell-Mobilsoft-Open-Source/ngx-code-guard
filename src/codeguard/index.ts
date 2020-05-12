@@ -286,15 +286,19 @@ function updateGitIgnore(entries: string[]): Rule {
   };
 }
 
-function updateJSONFile(filePath: string, newContent: JsonObject): Rule {
+function updateJSONFile(filePath: string, newContent: JsonObject, exists: boolean = true): Rule {
   return (tree: Tree, _context: SchematicContext) => {
-    const buffer = tree.read(filePath);
+    const buffer = !exists ? new Buffer('{}') : tree.read(filePath);
     let content = JSON.parse((buffer as Buffer).toString());
-    content = _merge(content, newContent);
-    tree.overwrite(filePath, pretty(JSON.stringify(content), {
+    content = pretty(JSON.stringify(_merge(content, newContent)), {
       ...prettierConfig,
       parser: 'json'
-    }));
+    })
+    if(!exists) {
+      tree.create(filePath, content)
+    } else {
+      tree.overwrite(filePath, content);
+    }
     return tree;
   };
 }
@@ -469,6 +473,16 @@ function addDevBuilder(options: ExtendedSchema): Rule {
 export function codeGuard(options: ExtendedSchema): Rule {
   return (tree: Tree, _context: SchematicContext) => {
 
+    const configPath = `${getBasePath(options)}/.codeguardrc`;
+
+    if(options.useConfig) {
+      if(tree.exists(configPath)) {
+        options = readFileAsJSON('.codeguardrc') as ExtendedSchema;
+      } else {
+        throw new SchematicsException('Could not find config file ./.codeguardrc');
+      }
+    }
+
     checkArgs(options, _context);
 
     const workspaceConfig = tree.read(`${getBasePath(options)}/angular.json`);
@@ -623,6 +637,10 @@ export function codeGuard(options: ExtendedSchema): Rule {
 
     if (options.a11y) {
       commonRules.push(addPa11y(options));
+    }
+
+    if(options.saveConfig) {
+      commonRules.push(updateJSONFile(configPath, options, tree.exists(configPath)));
     }
 
     if (options.cypressPort) {
