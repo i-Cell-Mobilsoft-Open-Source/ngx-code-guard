@@ -221,12 +221,17 @@ function updateGitIgnore(entries) {
         return tree;
     };
 }
-function updateJSONFile(filePath, newContent) {
+function updateJSONFile(filePath, newContent, exists = true) {
     return (tree, _context) => {
-        const buffer = tree.read(filePath);
+        const buffer = !exists ? new Buffer('{}') : tree.read(filePath);
         let content = JSON.parse(buffer.toString());
-        content = lodash_1.merge(content, newContent);
-        tree.overwrite(filePath, prettier_1.format(JSON.stringify(content), Object.assign(Object.assign({}, prettierConfig), { parser: 'json' })));
+        content = prettier_1.format(JSON.stringify(lodash_1.merge(content, newContent)), Object.assign(Object.assign({}, prettierConfig), { parser: 'json' }));
+        if (!exists) {
+            tree.create(filePath, content);
+        }
+        else {
+            tree.overwrite(filePath, content);
+        }
         return tree;
     };
 }
@@ -379,6 +384,15 @@ function addDevBuilder(options) {
 function codeGuard(options) {
     return (tree, _context) => {
         var _a;
+        const configPath = `${getBasePath(options)}/.codeguardrc`;
+        if (options.useConfig) {
+            if (tree.exists(configPath)) {
+                options = readFileAsJSON('.codeguardrc');
+            }
+            else {
+                throw new schematics_1.SchematicsException('Could not find config file ./.codeguardrc');
+            }
+        }
         checkArgs(options, _context);
         const workspaceConfig = tree.read(`${getBasePath(options)}/angular.json`);
         if (!workspaceConfig) {
@@ -515,6 +529,9 @@ function codeGuard(options) {
         }
         if (options.a11y) {
             commonRules.push(addPa11y(options));
+        }
+        if (options.saveConfig) {
+            commonRules.push(updateJSONFile(configPath, options, tree.exists(configPath)));
         }
         if (options.cypressPort) {
             commonRules.push(addCypressScripts(options), addDevBuilder(options));

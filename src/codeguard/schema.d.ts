@@ -24,4 +24,6 @@ export interface Schema {
     a11y: string;
     customWebpack: string;
     headers: string[];
+    saveConfig: boolean;
+    useConfig: boolean;
 }
