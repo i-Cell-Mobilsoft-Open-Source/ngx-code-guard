@@ -78,11 +78,13 @@ function checkArgs(options: ExtendedSchema, _context: SchematicContext) {
 
 function getStyle(workspace: experimental.workspace.WorkspaceSchema, options: ExtendedSchema): JsonObject {
   let schematics = jsonpath.query(workspace.projects[options.name], '$..schematics');
-  let result:any = null;
-  if(!schematics.length) {
+  let result: any = null;
+
+  if (!schematics.length) {
     schematics = jsonpath.query(workspace, '$..schematics');
   }
-  for(const schematic of schematics) {
+
+  for (const schematic of schematics) {
     const data = Object.keys(schematic);
     for (const key of data) {
       const styleKey = schematic[key as string].style ? 'style' : 'styleext';
@@ -95,7 +97,7 @@ function getStyle(workspace: experimental.workspace.WorkspaceSchema, options: Ex
   }
 
   if (!result) {
-    throw new SchematicsException('Could not identify project style config..');
+    result = { syntax: 'css', rules: 'stylelint-config-recommended' };
   }
 
   return result;
@@ -272,9 +274,9 @@ function updateWebpackConfig(filePath: string): Rule {
   };
 }
 
-function updateGitIgnore(entries: string[]): Rule {
+function updateGitIgnore(entries: string[], options: ExtendedSchema): Rule {
   return (tree: Tree, _context: SchematicContext) => {
-    const path = '.gitignore';
+    const path = `${getBasePath(options)}/.gitignore`;
     const contents = tree.read(path)?.toString().split('\n') as string[];
     for (let entry of entries) {
       if (!contents.find(line => line === entry)) {
@@ -294,7 +296,7 @@ function updateJSONFile(filePath: string, newContent: JsonObject, exists: boolea
       ...prettierConfig,
       parser: 'json'
     })
-    if(!exists) {
+    if (!exists) {
       tree.create(filePath, content)
     } else {
       tree.overwrite(filePath, content);
@@ -391,37 +393,40 @@ export function command({ command, args }: { command: string; args: string[]; })
 }
 
 function addLintScripts(options: ExtendedSchema, project: experimental.workspace.WorkspaceSchema): Rule {
+  const baseCmd = options.packageMgr === 'yarn' ? 'yarn' : 'npm run';
   let npxCommands = [['guard:eslint', 'npx eslint src/**/*.ts']];
-  let npmCommands = ['npm run guard:eslint'];
+  let npmCommands = [`${baseCmd} guard:eslint`];
 
   const style = getStyle(project, options);
 
   if (options.linter === 'tslint') {
     npxCommands = [['guard:tslint', 'npx tslint -p tsconfig.json -c tslint.json']];
-    npmCommands = ['npm run guard:eslint'];
+    npmCommands = [`${baseCmd} guard:tslint`];
   }
 
-  if (style.syntax === 'css') {
-    npxCommands.push(['guard:stylelint', 'npx stylelint "./src/**/*.css" --format=css']);
-    npmCommands.push('npm run guard:stylelint');
-  } else {
-    npxCommands.push(['guard:stylelint', `npx stylelint "./src/**/*.{${style.syntax},css}"`]);
-    npmCommands.push('npm run guard:stylelint');
+  if (style.syntax !== 'styl') {
+    if (style.syntax === 'css') {
+      npxCommands.push(['guard:stylelint', 'npx stylelint "./src/**/*.css" --format=css']);
+      npmCommands.push(`${baseCmd} guard:stylelint`);
+    } else {
+      npxCommands.push(['guard:stylelint', `npx stylelint "./src/**/*.{${style.syntax},css}"`]);
+      npmCommands.push(`${baseCmd} guard:stylelint`);
+    }
   }
-  
+
   npxCommands.push(['guard:jsonlint', `npx jsonlint-cli "./src/**/*.{json,JSON}"`]);
-  npmCommands.push('npm run guard:jsonlint');
-  
+  npmCommands.push(`${baseCmd} guard:jsonlint`);
+
   if (options.useMd) {
-    const mdGlob = process.platform === 'win32' ? '**/*.{md,MD}' : "'**/*.{md,MD}' ";
+    const mdGlob = isWindows() ? '**/*.{md,MD}' : "'**/*.{md,MD}' ";
     npxCommands.push(['guard:markdownlint', `npx markdownlint ${mdGlob} -i 'node_modules/**' -i '**/node_modules/**' -c mdlint.json`]);
-    npmCommands.push('npm run guard:markdownlint');
+    npmCommands.push(`${baseCmd} guard:markdownlint`);
   }
 
-  npxCommands = [['guard:lint', npmCommands.join(' && ')]];
+  npxCommands.push(['guard:lint', npmCommands.join(' && ')])
 
-  let packageMock = { scripts: {}};
-  npxCommands.forEach((scriptsDescription)=>{
+  let packageMock = { scripts: {} };
+  npxCommands.forEach((scriptsDescription) => {
     packageMock.scripts = Object.assign({}, packageMock.scripts, { [scriptsDescription[0]]: scriptsDescription[1] });
   });
 
@@ -475,8 +480,8 @@ export function codeGuard(options: ExtendedSchema): Rule {
 
     const configPath = `${getBasePath(options)}/.codeguardrc`;
 
-    if(options.useConfig) {
-      if(tree.exists(configPath)) {
+    if (options.useConfig) {
+      if (tree.exists(configPath)) {
         options = readFileAsJSON('.codeguardrc') as ExtendedSchema;
       } else {
         throw new SchematicsException('Could not find config file ./.codeguardrc');
@@ -512,6 +517,7 @@ export function codeGuard(options: ExtendedSchema): Rule {
     for (const rule of options.compilerFlags) {
       tsConfig.compilerOptions[rule] = false;
     }
+
 
     tsConfig.compilerOptions.strictPropertyInitialization = !options.compilerFlags.find(flag => flag === 'strictNullChecks');
 
@@ -600,6 +606,13 @@ export function codeGuard(options: ExtendedSchema): Rule {
         } else {
           return path !== blistpath;
         }
+      }),
+      filter((path) => {
+        if (style.syntax !== 'styl') {
+          return true;
+        } else {
+          return path !== '/.stylelintrc'
+        }
       })
     ];
 
@@ -628,7 +641,7 @@ export function codeGuard(options: ExtendedSchema): Rule {
     }
 
     if (options.docDir) {
-      commonRules.push(updateGitIgnore([options.docDir.charAt(0) === '.' ? options.docDir.substr(1) : options.docDir]));
+      commonRules.push(updateGitIgnore([options.docDir.charAt(0) === '.' ? options.docDir.substr(1) : options.docDir], options));
     }
 
     if (!options.new && options.customWebpack) {
@@ -639,8 +652,8 @@ export function codeGuard(options: ExtendedSchema): Rule {
       commonRules.push(addPa11y(options));
     }
 
-    if(options.saveConfig) {
-      commonRules.push(updateJSONFile(configPath, options, tree.exists(configPath)));
+    if (options.saveConfig) {
+      commonRules.push(updateJSONFile(configPath, _omit(options, 'new'), tree.exists(configPath)));
     }
 
     if (options.cypressPort) {
@@ -648,6 +661,8 @@ export function codeGuard(options: ExtendedSchema): Rule {
         addCypressScripts(options),
         addDevBuilder(options));
     }
+
+
 
     if (options.overwrite) {
       return chain([
