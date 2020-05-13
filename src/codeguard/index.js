@@ -68,7 +68,7 @@ function getStyle(workspace, options) {
         }
     }
     if (!result) {
-        throw new schematics_1.SchematicsException('Could not identify project style config..');
+        result = { syntax: 'css', rules: 'stylelint-config-recommended' };
     }
     return result;
 }
@@ -207,10 +207,10 @@ function updateWebpackConfig(filePath) {
         return tree;
     };
 }
-function updateGitIgnore(entries) {
+function updateGitIgnore(entries, options) {
     return (tree, _context) => {
         var _a;
-        const path = '.gitignore';
+        const path = `${getBasePath(options)}/.gitignore`;
         const contents = (_a = tree.read(path)) === null || _a === void 0 ? void 0 : _a.toString().split('\n');
         for (let entry of entries) {
             if (!contents.find(line => line === entry)) {
@@ -312,29 +312,32 @@ function command({ command, args }) {
 }
 exports.command = command;
 function addLintScripts(options, project) {
+    const baseCmd = options.packageMgr === 'yarn' ? 'yarn' : 'npm run';
     let npxCommands = [['guard:eslint', 'npx eslint src/**/*.ts']];
-    let npmCommands = ['npm run guard:eslint'];
+    let npmCommands = [`${baseCmd} guard:eslint`];
     const style = getStyle(project, options);
     if (options.linter === 'tslint') {
         npxCommands = [['guard:tslint', 'npx tslint -p tsconfig.json -c tslint.json']];
-        npmCommands = ['npm run guard:eslint'];
+        npmCommands = [`${baseCmd} guard:tslint`];
     }
-    if (style.syntax === 'css') {
-        npxCommands.push(['guard:stylelint', 'npx stylelint "./src/**/*.css" --format=css']);
-        npmCommands.push('npm run guard:stylelint');
-    }
-    else {
-        npxCommands.push(['guard:stylelint', `npx stylelint "./src/**/*.{${style.syntax},css}"`]);
-        npmCommands.push('npm run guard:stylelint');
+    if (style.syntax !== 'styl') {
+        if (style.syntax === 'css') {
+            npxCommands.push(['guard:stylelint', 'npx stylelint "./src/**/*.css" --format=css']);
+            npmCommands.push(`${baseCmd} guard:stylelint`);
+        }
+        else {
+            npxCommands.push(['guard:stylelint', `npx stylelint "./src/**/*.{${style.syntax},css}"`]);
+            npmCommands.push(`${baseCmd} guard:stylelint`);
+        }
     }
     npxCommands.push(['guard:jsonlint', `npx jsonlint-cli "./src/**/*.{json,JSON}"`]);
-    npmCommands.push('npm run guard:jsonlint');
+    npmCommands.push(`${baseCmd} guard:jsonlint`);
     if (options.useMd) {
-        const mdGlob = process.platform === 'win32' ? '**/*.{md,MD}' : "'**/*.{md,MD}' ";
+        const mdGlob = isWindows() ? '**/*.{md,MD}' : "'**/*.{md,MD}' ";
         npxCommands.push(['guard:markdownlint', `npx markdownlint ${mdGlob} -i 'node_modules/**' -i '**/node_modules/**' -c mdlint.json`]);
-        npmCommands.push('npm run guard:markdownlint');
+        npmCommands.push(`${baseCmd} guard:markdownlint`);
     }
-    npxCommands = [['guard:lint', npmCommands.join(' && ')]];
+    npxCommands.push(['guard:lint', npmCommands.join(' && ')]);
     let packageMock = { scripts: {} };
     npxCommands.forEach((scriptsDescription) => {
         packageMock.scripts = Object.assign({}, packageMock.scripts, { [scriptsDescription[0]]: scriptsDescription[1] });
@@ -500,6 +503,14 @@ function codeGuard(options) {
                 else {
                     return path !== blistpath;
                 }
+            }),
+            schematics_1.filter((path) => {
+                if (style.syntax !== 'styl') {
+                    return true;
+                }
+                else {
+                    return path !== '/.stylelintrc';
+                }
             })
         ];
         _context.addTask(new tasks_1.NodePackageInstallTask({
@@ -522,7 +533,7 @@ function codeGuard(options) {
             commonRules.push(addSnykMonitor(options));
         }
         if (options.docDir) {
-            commonRules.push(updateGitIgnore([options.docDir.charAt(0) === '.' ? options.docDir.substr(1) : options.docDir]));
+            commonRules.push(updateGitIgnore([options.docDir.charAt(0) === '.' ? options.docDir.substr(1) : options.docDir], options));
         }
         if (!options.new && options.customWebpack) {
             commonRules.push(updateWebpackConfig(options.customWebpack));
@@ -531,7 +542,7 @@ function codeGuard(options) {
             commonRules.push(addPa11y(options));
         }
         if (options.saveConfig) {
-            commonRules.push(updateJSONFile(configPath, options, tree.exists(configPath)));
+            commonRules.push(updateJSONFile(configPath, lodash_1.omit(options, 'new'), tree.exists(configPath)));
         }
         if (options.cypressPort) {
             commonRules.push(addCypressScripts(options), addDevBuilder(options));
